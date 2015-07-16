@@ -100,7 +100,12 @@ public class IntactComplexUtils {
         cross.setIdentifier(xref.getId());
         Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
         if (searchUrl != null) {
-            cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}",cross.getIdentifier()));
+            if(cross.getIdentifier().startsWith("PR:")){
+                String modifiedIdentifier = cross.getIdentifier().replace("PR:", "");
+                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier));
+            } else {
+                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", cross.getIdentifier()));
+            }
         }
         if (xref instanceof InteractorXref) {
             InteractorXref interactorXref = (InteractorXref) xref;
