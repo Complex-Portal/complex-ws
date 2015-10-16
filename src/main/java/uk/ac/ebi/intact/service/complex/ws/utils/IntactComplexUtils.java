@@ -40,6 +40,9 @@ public class IntactComplexUtils {
 
     public static final String SEARCH = "search-url";
     public static final String SEARCH_MI = "MI:0615";
+    
+    public static final String RNA_CENTRAL = "RNAcentral";
+    public static final String RNA_CENTRAL_MI = "MI:1357";
 
     public static List<String> getComplexSynonyms(IntactComplex complex) {
         List<String> synosyms = new ArrayList<String>();
@@ -49,13 +52,13 @@ public class IntactComplexUtils {
         return synosyms;
     }
 
-    public static String getComplexName(IntactComplex complex){
+    public static String getComplexName(IntactComplex complex) {
         String name = complex.getRecommendedName();
         if (name != null) return name;
         name = complex.getSystematicName();
         if (name != null) return name;
         List<String> synonyms = getComplexSynonyms(complex);
-        if (! synonyms.isEmpty()) return synonyms.get(0);
+        if (!synonyms.isEmpty()) return synonyms.get(0);
         return complex.getShortName();
     }
 
@@ -70,7 +73,7 @@ public class IntactComplexUtils {
         }
         for (Xref xref : complex.getIdentifiers()) {
             // We does not want to show us a cross references. That does not make sense.
-            if (! xref.getDatabase().getShortName().equals(INTACT)) {
+            if (!xref.getDatabase().getShortName().equals(INTACT)) {
                 cross = createCrossReference(xref);
                 crossReferences.add(cross);
             }
@@ -90,7 +93,7 @@ public class IntactComplexUtils {
         }
         if (xref.getQualifier() != null) {
             cross.setQualifier(xref.getQualifier().getFullName());
-            if (xref.getQualifier() instanceof OntologyTerm){
+            if (xref.getQualifier() instanceof OntologyTerm) {
                 OntologyTerm ontologyTerm = (OntologyTerm) xref.getQualifier();
                 if (ontologyTerm.getDefinition() != null)
                     cross.setQualifierDefinition(ontologyTerm.getDefinition());
@@ -100,7 +103,7 @@ public class IntactComplexUtils {
         cross.setIdentifier(xref.getId());
         Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
         if (searchUrl != null) {
-            if(cross.getIdentifier().startsWith("PR:")){
+            if (cross.getIdentifier().startsWith("PR:")) {
                 String modifiedIdentifier = cross.getIdentifier().replace("PR:", "");
                 cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier));
             } else {
@@ -131,15 +134,21 @@ public class IntactComplexUtils {
                     Alias alias = AliasUtils.collectFirstAliasWithType(protein.getAliases(), Alias.COMPLEX_SYNONYM_MI, Alias.COMPLEX_SYNONYM);
                     part.setName(alias != null ? alias.getName() : protein.getGeneName());
                     part.setIdentifier(protein.getPreferredIdentifier().getId());
-                }
-                else if (interactor instanceof BioactiveEntity) {
+                } else if (interactor instanceof BioactiveEntity) {
                     BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
                     part.setName(bioactiveEntity.getShortName());
                     part.setIdentifier(bioactiveEntity.getChebi());
-                }
-                else {
-                    part.setName(interactor.getShortName());
-                    part.setIdentifier(interactor.getFullName());
+                } else {
+                    for (Xref x : interactor.getIdentifiers()) {
+                        if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
+                            part.setName(interactor.getShortName());
+                            part.setIdentifier(x.getId());
+                        }
+                    }
+                    if (part.getName() == null && part.getIdentifier() == null) {
+                        part.setName(interactor.getShortName());
+                        part.setIdentifier(interactor.getFullName());
+                    }
                 }
                 Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
                 if (searchUrl != null) {
@@ -163,7 +172,7 @@ public class IntactComplexUtils {
             Comparator<ModelledParticipant> comparator = new Comparator<ModelledParticipant>() {
                 @Override
                 public int compare(ModelledParticipant o1, ModelledParticipant o2) {
-                    return (((IntactInteractor)o1.getInteractor()).getAc().compareTo(((IntactInteractor)o2.getInteractor()).getAc()));
+                    return (((IntactInteractor) o1.getInteractor()).getAc().compareTo(((IntactInteractor) o2.getInteractor()).getAc()));
                 }
             };
             List<ModelledParticipant> participantList = (List<ModelledParticipant>) participants;
@@ -172,11 +181,10 @@ public class IntactComplexUtils {
             ModelledParticipant aux = participantList.get(0);
             int stochiometry = 0;
             for (ModelledParticipant participant : participantList) {
-                if (((IntactInteractor)aux.getInteractor()).getAc().equals(((IntactInteractor) participant.getInteractor()).getAc())) {
+                if (((IntactInteractor) aux.getInteractor()).getAc().equals(((IntactInteractor) participant.getInteractor()).getAc())) {
                     //Same
                     stochiometry += participant.getStoichiometry().getMinValue();
-                }
-                else {
+                } else {
                     //Different
                     aux.setStoichiometry(stochiometry);
                     merged.add(aux);
@@ -187,8 +195,7 @@ public class IntactComplexUtils {
             aux.setStoichiometry(stochiometry);
             merged.add(aux);
             return merged;
-        }
-        else {
+        } else {
             return participants;
         }
     }
@@ -201,8 +208,7 @@ public class IntactComplexUtils {
                     ComplexDetailsFeatures complexDetailsFeatures = createFeature(linked);
                     part.getLinkedFeatures().add(complexDetailsFeatures);
                 }
-            }
-            else {
+            } else {
                 ComplexDetailsFeatures complexDetailsFeatures = createFeature(feature);
                 part.getOtherFeatures().add(complexDetailsFeatures);
             }
