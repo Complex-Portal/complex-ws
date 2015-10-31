@@ -8,7 +8,7 @@
     <groupId>uk.ac.ebi.intact.service.complexportal</groupId>
     <artifactId>complex-ws</artifactId>
     <packaging>war</packaging>
-    <version>2.0.1</version>
+    <version>2.0.2-SNAPSHOT</version>
     <name>complex-ws</name>
 
     <properties>
@@ -19,7 +19,7 @@
         <connection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</connection>
         <developerConnection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</developerConnection>
         <url>https://bitbucket.org/intact-ebi/complex-ws</url>
-      <tag>complex-ws-2.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
     
     <dependencies>
