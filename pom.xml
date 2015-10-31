@@ -16,6 +16,12 @@
         <spring.version>3.2.4.RELEASE</spring.version>
     </properties>
 
+    <scm>
+        <connection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</connection>
+        <developerConnection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</developerConnection>
+        <url>https://bitbucket.org/intact-ebi/complex-ws</url>
+    </scm>
+    
     <dependencies>
 
         <!-- IntAct solr schema dependencies -->
