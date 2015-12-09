@@ -296,44 +296,64 @@ public class IntactComplexUtils {
     //
     // ANNOTATIONS
     //
-    public static String getProperties(IntactComplex complex) {
-        Annotation annotation = AnnotationUtils.collectFirstAnnotationWithTopic(complex.getAnnotations(), COMPLEX_PROPERTIES_MI, COMPLEX_PROPERTIES);
-        if (annotation != null)
-            return annotation.getValue();
-        else
-            return null;
+    public static List<String> getProperties(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_PROPERTIES_MI, COMPLEX_PROPERTIES);
+        if (annotations != null){
+            List<String> properties = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                properties.add(annotation.getValue());
+            }
+            return properties;
+        }
+        return null;
     }
 
-    public static String getDisease(IntactComplex complex) {
-        Annotation annotation = AnnotationUtils.collectFirstAnnotationWithTopic(complex.getAnnotations(), COMPLEX_DISEASE_MI, COMPLEX_DISEASE);
-        if (annotation != null)
-            return annotation.getValue();
-        else
-            return null;
+    public static List<String> getDisease(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_DISEASE_MI, COMPLEX_DISEASE);
+        if (annotations != null){
+            List<String> diseases = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                diseases.add(annotation.getValue());
+            }
+            return diseases;
+        }
+        return null;
     }
 
-    public static String getLigand(IntactComplex complex) {
-        Annotation annotation = AnnotationUtils.collectFirstAnnotationWithTopic(complex.getAnnotations(), COMPLEX_LIGAND_IA, COMPLEX_LIGAND);
-        if (annotation != null)
-            return annotation.getValue();
-        else
-            return null;
+    public static List<String> getLigand(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_LIGAND_IA, COMPLEX_LIGAND);
+        if (annotations != null){
+            List<String> ligands = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                ligands.add(annotation.getValue());
+            }
+            return ligands;
+        }
+        return null;
     }
 
-    public static String getComplexAssembly(IntactComplex complex) {
-        Annotation annotation = AnnotationUtils.collectFirstAnnotationWithTopic(complex.getAnnotations(), COMPLEX_ASSEMBLY_IA, COMPLEX_ASSEMBLY);
-        if (annotation != null)
-            return annotation.getValue();
-        else
-            return null;
+    public static List<String> getComplexAssembly(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_ASSEMBLY_IA, COMPLEX_ASSEMBLY);
+        if (annotations != null){
+            List<String> complexAssemblies = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                complexAssemblies.add(annotation.getValue());
+            }
+            return complexAssemblies;
+        }
+        return null;
     }
 
-    public static String getFunction(IntactComplex complex) {
-        Annotation annotation = AnnotationUtils.collectFirstAnnotationWithTopic(complex.getAnnotations(), CURATED_COMPLEX_IA, CURATED_COMPLEX);
-        if (annotation != null)
-            return annotation.getValue();
-        else
-            return null;
+    public static List<String> getFunction(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), CURATED_COMPLEX_IA, CURATED_COMPLEX);
+        if (annotations != null){
+            List<String> functions = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                functions.add(annotation.getValue());
+            }
+            return functions;
+        }
+        return null;
     }
 
 }
