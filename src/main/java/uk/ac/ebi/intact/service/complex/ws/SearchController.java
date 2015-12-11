@@ -163,11 +163,11 @@ public class SearchController {
         if ( complex != null ) {
             details = new ComplexDetails();
             details.setAc(complex.getAc());
-            details.setFunction         ( IntactComplexUtils.getFunction        (complex) );
+            details.setFunctions(IntactComplexUtils.getFunction(complex));
             details.setProperties       ( IntactComplexUtils.getProperties      (complex) );
-            details.setDisease          ( IntactComplexUtils.getDisease         (complex) );
-            details.setLigand           ( IntactComplexUtils.getLigand          (complex) );
-            details.setComplexAssembly  ( IntactComplexUtils.getComplexAssembly (complex) );
+            details.setDiseases(IntactComplexUtils.getDisease(complex));
+            details.setLigands(IntactComplexUtils.getLigand(complex));
+            details.setComplexAssemblies(IntactComplexUtils.getComplexAssembly(complex));
             details.setName             ( IntactComplexUtils.getComplexName     (complex) );
             details.setSynonyms         ( IntactComplexUtils.getComplexSynonyms (complex) );
             details.setSystematicName   ( IntactComplexUtils.getSystematicName  (complex) );
