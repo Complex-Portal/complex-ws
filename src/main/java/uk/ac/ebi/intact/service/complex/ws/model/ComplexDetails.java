@@ -36,6 +36,11 @@ public class ComplexDetails {
     private Collection<ComplexDetailsParticipants> participants;
     private Collection<ComplexDetailsCrossReferences> crossReferences;
     private String institution;
+    private Collection<String> agonists;
+    private Collection<String> antagonists;
+    private Collection<String> comments;
+    
+    
 
     /*************************/
     /*      Constructor      */
@@ -49,6 +54,9 @@ public class ComplexDetails {
         this.ligands = new ArrayList<String>();
         this.complexAssemblies = new ArrayList<String>();
         this.diseases = new ArrayList<String>();
+        this.agonists = new ArrayList<String>();
+        this.antagonists = new ArrayList<String>();
+        this.comments = new ArrayList<String>();
     }
 
     /*********************************/
@@ -100,5 +108,29 @@ public class ComplexDetails {
 
     public void setInstitution(String institution) {
         this.institution = institution;
+    }
+
+    public Collection<String> getAgonists() {
+        return agonists;
+    }
+
+    public void setAgonists(Collection<String> agonists) {
+        this.agonists = agonists;
+    }
+
+    public Collection<String> getAntagonists() {
+        return antagonists;
+    }
+
+    public void setAntagonists(Collection<String> antagonists) {
+        this.antagonists = antagonists;
+    }
+
+    public Collection<String> getComments() {
+        return comments;
+    }
+
+    public void setComments(Collection<String> comments) {
+        this.comments = comments;
     }
 }

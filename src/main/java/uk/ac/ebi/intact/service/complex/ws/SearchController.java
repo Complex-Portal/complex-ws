@@ -163,17 +163,20 @@ public class SearchController {
         if ( complex != null ) {
             details = new ComplexDetails();
             details.setAc(complex.getAc());
-            details.setFunctions(IntactComplexUtils.getFunction(complex));
-            details.setProperties       ( IntactComplexUtils.getProperties      (complex) );
-            details.setDiseases(IntactComplexUtils.getDisease(complex));
-            details.setLigands(IntactComplexUtils.getLigand(complex));
-            details.setComplexAssemblies(IntactComplexUtils.getComplexAssembly(complex));
-            details.setName             ( IntactComplexUtils.getComplexName     (complex) );
-            details.setSynonyms         ( IntactComplexUtils.getComplexSynonyms (complex) );
-            details.setSystematicName   ( IntactComplexUtils.getSystematicName  (complex) );
-            details.setSpecies          ( IntactComplexUtils.getSpeciesName     (complex) + "; " +
-                                          IntactComplexUtils.getSpeciesTaxId    (complex) );
-            details.setInstitution      ( complex.getSource().getShortName());
+            details.setFunctions        ( IntactComplexUtils.getFunctions           (complex) );
+            details.setProperties       ( IntactComplexUtils.getProperties          (complex) );
+            details.setDiseases         ( IntactComplexUtils.getDiseases            (complex) );
+            details.setLigands          ( IntactComplexUtils.getLigands             (complex) );
+            details.setComplexAssemblies( IntactComplexUtils.getComplexAssemblies   (complex) );
+            details.setName             ( IntactComplexUtils.getComplexName         (complex) );
+            details.setSynonyms         ( IntactComplexUtils.getComplexSynonyms     (complex) );
+            details.setSystematicName   ( IntactComplexUtils.getSystematicName      (complex) );
+            details.setSpecies          ( IntactComplexUtils.getSpeciesName         (complex) + "; " +
+                                          IntactComplexUtils.getSpeciesTaxId        (complex) );
+            details.setInstitution      ( complex.getSource().getShortName()                  );
+            details.setAgonists         ( IntactComplexUtils.getAgonists            (complex) );
+            details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
+            details.setComments         ( IntactComplexUtils.getComments            (complex) );
 
             IntactComplexUtils.setParticipants(complex, details);
             IntactComplexUtils.setCrossReferences(complex, details);

@@ -44,6 +44,15 @@ public class IntactComplexUtils {
     public static final String RNA_CENTRAL = "RNAcentral";
     public static final String RNA_CENTRAL_MI = "MI:1357";
 
+    public static final String COMPLEX_AGONIST = "agonist";
+    public static final String COMPLEX_AGONIST_MI = "MI:0625";
+
+    public static final String COMPLEX_ANTAGONIST = "antagonist";
+    public static final String COMPLEX_ANTAGONIST_MI = "MI:0626";
+
+    public static final String COMPLEX_COMMENT = "comment";
+    public static final String COMPLEX_COMMENT_MI = "MI:0612";
+
     public static List<String> getComplexSynonyms(IntactComplex complex) {
         List<String> synosyms = new ArrayList<String>();
         for (Alias alias : AliasUtils.collectAllAliasesHavingType(complex.getAliases(), Alias.COMPLEX_SYNONYM_MI, Alias.COMPLEX_SYNONYM)) {
@@ -308,7 +317,7 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static List<String> getDisease(IntactComplex complex) {
+    public static List<String> getDiseases(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_DISEASE_MI, COMPLEX_DISEASE);
         if (annotations != null){
             List<String> diseases = new ArrayList<String>();
@@ -320,7 +329,7 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static List<String> getLigand(IntactComplex complex) {
+    public static List<String> getLigands(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_LIGAND_IA, COMPLEX_LIGAND);
         if (annotations != null){
             List<String> ligands = new ArrayList<String>();
@@ -332,7 +341,7 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static List<String> getComplexAssembly(IntactComplex complex) {
+    public static List<String> getComplexAssemblies(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_ASSEMBLY_IA, COMPLEX_ASSEMBLY);
         if (annotations != null){
             List<String> complexAssemblies = new ArrayList<String>();
@@ -344,7 +353,7 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static List<String> getFunction(IntactComplex complex) {
+    public static List<String> getFunctions(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), CURATED_COMPLEX_IA, CURATED_COMPLEX);
         if (annotations != null){
             List<String> functions = new ArrayList<String>();
@@ -352,6 +361,42 @@ public class IntactComplexUtils {
                 functions.add(annotation.getValue());
             }
             return functions;
+        }
+        return null;
+    }
+
+    public static List<String> getAgonists(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_AGONIST_MI, COMPLEX_AGONIST);
+        if (annotations != null){
+            List<String> agonists = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                agonists.add(annotation.getValue());
+            }
+            return agonists;
+        }
+        return null;
+    }
+
+    public static List<String> getAntagonists(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_ANTAGONIST_MI, COMPLEX_ANTAGONIST);
+        if (annotations != null){
+            List<String> antagonists = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                antagonists.add(annotation.getValue());
+            }
+            return antagonists;
+        }
+        return null;
+    }
+
+    public static List<String> getComments(IntactComplex complex) {
+        Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_COMMENT_MI, COMPLEX_COMMENT);
+        if (annotations != null){
+            List<String> comments = new ArrayList<String>();
+            for(Annotation annotation : annotations){
+                comments.add(annotation.getValue());
+            }
+            return comments;
         }
         return null;
     }
