@@ -1,0 +1,2 @@
+{% for js in page.customjs %}
+    <script type="text/javascript" src="http://www.ebi.ac.uk/intact/jira/s/f89ce072c2cb73e98a9dd0097bd5e1f8-T/en_GB-z108r9/70111/b6b48b2829824b869586ac216d119363/2.0.8/_/download/batch/com.atlassian.jira.collector.plugin.jira-issue-collector-plugin:issuecollector/com.atlassian.jira.collector.plugin.jira-issue-collector-plugin:issuecollector.js?locale=en-GB&collectorId=bc2d802e"></script>{% endfor %}
