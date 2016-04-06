@@ -16,9 +16,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</connection>
-        <developerConnection>scm:git:https://bitbucket.org/intact-ebi/complex-ws.git</developerConnection>
-        <url>https://bitbucket.org/intact-ebi/complex-ws</url>
+        <connection>scm:git:https://github.com/Complex-Portal/Complex-WS.git</connection>
+        <developerConnection>scm:git:https://github.com/Complex-Portal/Complex-WS.git</developerConnection>
+        <url>https://github.com/Complex-Portal/Complex-WS</url>
       <tag>HEAD</tag>
   </scm>
     
