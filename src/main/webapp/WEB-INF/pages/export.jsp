@@ -13,6 +13,6 @@
 <body>
 <h2>Export method (Experimental state)</h2>
 <ul>
-    <li>Get Json format to visualize EBI-1163476<br><a href="<%= request.getContextPath() %>/export/EBI-1163476"><%= request.getContextPath() %>/export/EBI-1163476</a></li></ul>
+    <li>Get Json format to visualize EBI-1163476<br><a href="${pageContext.request.contextPath}">/export/EBI-1163476">/export/EBI-1163476</a></li></ul>
 </body>
 </html>
