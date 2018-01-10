@@ -164,6 +164,12 @@ public class SearchController {
         if ( complex != null ) {
             details = new ComplexDetails();
             details.setAc(complex.getAc());
+
+            //TODO: un-hack the following lines to accept the new complexAC from the db when they will be loaded into the DB
+//            details.setComplexAc(complex.getComplexAc);
+            details.setComplexAc("CPX-1");
+
+
             details.setFunctions        ( IntactComplexUtils.getFunctions           (complex) );
             details.setProperties       ( IntactComplexUtils.getProperties          (complex) );
             details.setDiseases         ( IntactComplexUtils.getDiseases            (complex) );
