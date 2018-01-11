@@ -76,36 +76,44 @@ public class SearchController {
     /********************************/
     /*      Private attributes      */
     /********************************/
+
     @Autowired
-    private DataProvider dataProvider ;
+    private DataProvider dataProvider;
+
     @Autowired
     @Qualifier("intactDao")
     private IntactDao intactDao;
+
     private static final Log log = LogFactory.getLog(SearchController.class);
 
     /****************************/
     /*      Public methods      */
     /****************************/
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String showHomeHelp(HttpServletResponse response){
         enableClacks(response);
         return "home";
     }
+
     @RequestMapping(value = "/search/", method = RequestMethod.GET)
     public String showSearchHelp(HttpServletResponse response){
         enableClacks(response);
         return "search";
     }
+
     @RequestMapping(value = "/details/", method = RequestMethod.GET)
     public String showDetailsHelp(HttpServletResponse response){
         enableClacks(response);
         return "details";
     }
+
     @RequestMapping(value = "/export/", method = RequestMethod.GET)
     public String showExportHelp(HttpServletResponse response){
         enableClacks(response);
         return "export";
     }
+
     @RequestMapping(value = "/count/{query}", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
     public String count(@PathVariable String query, ModelMap model, HttpServletResponse response) throws SolrServerException {
         enableClacks(response);
@@ -119,6 +127,7 @@ public class SearchController {
         model.addAttribute("count", total);
         return "count";
     }
+
     /*
      - We can access to that method using:
          http://<servername>:<port>/search/<something to query>
@@ -157,10 +166,13 @@ public class SearchController {
      */
     @RequestMapping(value = "/details/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
-    public ResponseEntity<String> retrieveComplex(@PathVariable String ac, HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> retrieveComplex(@PathVariable String ac,
+                                                  HttpServletResponse response) throws Exception {
+
         IntactComplex complex = intactDao.getComplexDao().getByAc(ac);
+
         ComplexDetails details = null;
-        // Function
+
         if ( complex != null ) {
             details = new ComplexDetails();
             details.setAc(complex.getAc());
@@ -169,35 +181,38 @@ public class SearchController {
 //            details.setComplexAc(complex.getComplexAc);
             details.setComplexAc("CPX-1");
 
-
-            details.setFunctions        ( IntactComplexUtils.getFunctions           (complex) );
-            details.setProperties       ( IntactComplexUtils.getProperties          (complex) );
-            details.setDiseases         ( IntactComplexUtils.getDiseases            (complex) );
-            details.setLigands          ( IntactComplexUtils.getLigands             (complex) );
-            details.setComplexAssemblies( IntactComplexUtils.getComplexAssemblies   (complex) );
-            details.setName             ( IntactComplexUtils.getComplexName         (complex) );
-            details.setSynonyms         ( IntactComplexUtils.getComplexSynonyms     (complex) );
-            details.setSystematicName   ( IntactComplexUtils.getSystematicName      (complex) );
-            details.setSpecies          ( IntactComplexUtils.getSpeciesName         (complex) + "; " +
-                                          IntactComplexUtils.getSpeciesTaxId        (complex) );
-            details.setInstitution      ( complex.getSource().getShortName()                  );
-            details.setAgonists         ( IntactComplexUtils.getAgonists            (complex) );
+            details.setFunctions(IntactComplexUtils.getFunctions(complex));
+            details.setProperties(IntactComplexUtils.getProperties(complex));
+            details.setDiseases(IntactComplexUtils.getDiseases(complex));
+            details.setLigands(IntactComplexUtils.getLigands(complex));
+            details.setComplexAssemblies(IntactComplexUtils.getComplexAssemblies(complex));
+            details.setName(IntactComplexUtils.getComplexName(complex));
+            details.setSynonyms(IntactComplexUtils.getComplexSynonyms(complex));
+            details.setSystematicName(IntactComplexUtils.getSystematicName(complex));
+            details.setSpecies(IntactComplexUtils.getSpeciesName(complex) + "; " + IntactComplexUtils.getSpeciesTaxId(complex));
+            details.setInstitution(complex.getSource().getShortName());
+            details.setAgonists(IntactComplexUtils.getAgonists(complex));
             details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
-            details.setComments         ( IntactComplexUtils.getComments            (complex) );
+            details.setComments(IntactComplexUtils.getComments(complex));
 
             IntactComplexUtils.setParticipants(complex, details);
             IntactComplexUtils.setCrossReferences(complex, details);
+
         }
         else{
             throw new Exception();
         }
+
         StringWriter writer = new StringWriter();
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(writer, details);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+
         enableCORS(headers);
+
         return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
     }
 
@@ -208,6 +223,7 @@ public class SearchController {
                                                 @RequestParam (required = false) String format,
                                                 HttpServletResponse response) throws Exception {
         Boolean exportAsFile = false;
+
         List<IntactComplex> complexes;
         if(isQueryASingleId(query)) {
             complexes = new ArrayList<IntactComplex>(1);
@@ -225,6 +241,7 @@ public class SearchController {
             }
             exportAsFile = true;
         }
+
         ResponseEntity<String> responseEntity = null;
         if (!complexes.isEmpty()) {
             InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
