@@ -16,6 +16,7 @@ Methods available:
 <ul>
     <li><a href="${pageContext.request.contextPath}/search/">/search/</a></li>
     <li><a href="${pageContext.request.contextPath}/details/">/details/</a></li>
+    <li><a href="${pageContext.request.contextPath}/complex/">/complex/</a></li>
     <li><a href="${pageContext.request.contextPath}/export/">/export/</a></li>
 </ul>
 </body>

@@ -109,6 +109,13 @@ public class SearchController {
         return "details";
     }
 
+
+    @RequestMapping(value = "/complex/", method = RequestMethod.GET)
+    public String showComplexHelp(HttpServletResponse response){
+        enableClacks(response);
+        return "complex";
+    }
+
     @RequestMapping(value = "/export/", method = RequestMethod.GET)
     public String showExportHelp(HttpServletResponse response){
         enableClacks(response);
