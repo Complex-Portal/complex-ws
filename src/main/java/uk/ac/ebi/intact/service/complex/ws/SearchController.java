@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -171,16 +172,56 @@ public class SearchController {
 
         IntactComplex complex = intactDao.getComplexDao().getByAc(ac);
 
-        ComplexDetails details = null;
+        ComplexDetails details = createComplexDetails(complex);
 
-        if ( complex != null ) {
-            details = new ComplexDetails();
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(writer, details);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+
+        enableCORS(headers);
+
+        return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
+    }
+
+
+    /*
+    * Query the complex details from the database given a new complexAc identifier
+    * Returns answer in json format
+    *
+    * */
+    @RequestMapping(value = "/complex/{complexAc}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
+    public ResponseEntity<String> retrieveComplexByAc(@PathVariable String complexAc,
+                                                      HttpServletResponse response) throws Exception {
+
+        IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(complexAc);
+
+        ComplexDetails details = createComplexDetails(complex);
+
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(writer, details);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+
+        enableCORS(headers);
+
+        return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
+    }
+
+    private ComplexDetails createComplexDetails(IntactComplex complex) throws Exception {
+
+        ComplexDetails details = new ComplexDetails();
+
+        if (complex != null) {
             details.setAc(complex.getAc());
-
-            //TODO: un-hack the following lines to accept the new complexAC from the db when they will be loaded into the DB
-//            details.setComplexAc(complex.getComplexAc);
-            details.setComplexAc("CPX-1");
-
+            details.setComplexAc(complex.getComplexAc());
             details.setFunctions(IntactComplexUtils.getFunctions(complex));
             details.setProperties(IntactComplexUtils.getProperties(complex));
             details.setDiseases(IntactComplexUtils.getDiseases(complex));
@@ -197,23 +238,11 @@ public class SearchController {
 
             IntactComplexUtils.setParticipants(complex, details);
             IntactComplexUtils.setCrossReferences(complex, details);
-
-        }
-        else{
+        } else {
             throw new Exception();
         }
 
-        StringWriter writer = new StringWriter();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(writer, details);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
-
-        enableCORS(headers);
-
-        return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
+        return details;
     }
 
     @RequestMapping(value = "/export/{query}", method = RequestMethod.GET)
@@ -227,7 +256,15 @@ public class SearchController {
         List<IntactComplex> complexes;
         if(isQueryASingleId(query)) {
             complexes = new ArrayList<IntactComplex>(1);
-            IntactComplex complex = intactDao.getComplexDao().getByAc(query);
+
+            IntactComplex complex;
+            if(query.startsWith("EBI-")) {
+                complex = intactDao.getComplexDao().getByAc(query);
+            } else {
+                complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(query);
+
+            }
+
             if (complex != null)
                 complexes.add(complex);
         }
@@ -268,7 +305,7 @@ public class SearchController {
     }
 
     private boolean isQueryASingleId(String query) {
-        return query.startsWith("EBI-") && query.trim().split(" ").length == 1;
+        return (query.startsWith("EBI-") || query.startsWith("CPX-")) && query.trim().split(" ").length == 1;
     }
 
     private ResponseEntity<String> createXml25Response(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, Boolean exportAsFile) {
