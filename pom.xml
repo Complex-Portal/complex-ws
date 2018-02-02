@@ -26,13 +26,12 @@
         <dataexchange.version>3.0.18</dataexchange.version>
     </properties>
 
-
     <scm>
         <connection>scm:git:https://github.com/Complex-Portal/Complex-WS.git</connection>
         <developerConnection>scm:git:https://github.com/Complex-Portal/Complex-WS.git</developerConnection>
         <url>https://github.com/Complex-Portal/Complex-WS</url>
-        <tag>HEAD</tag>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <dependencies>
 
@@ -259,7 +258,7 @@
                     </connectors>
                     <jettyConfig>${project.build.directory}/classes/META-INF/jetty.xml</jettyConfig>
                     <stopPort>9009</stopPort>
-                    <stopKey />
+                    <stopKey/>
                 </configuration>
             </plugin>
             <plugin>
