@@ -14,9 +14,10 @@
 <h2>Welcome to the complex web service</h2>
 Methods available:
 <ul>
-    <li><a href="<%= request.getContextPath() %>/search/"><%= request.getContextPath() %>/search/</a></li>
-    <li><a href="<%= request.getContextPath() %>/details/"><%= request.getContextPath() %>/details/</a></li>
-    <li><a href="<%= request.getContextPath() %>/export/"><%= request.getContextPath() %>/export/</a></li>
+    <li><a href="${pageContext.request.contextPath}/search/">/search/</a></li>
+    <li><a href="${pageContext.request.contextPath}/details/">/details/</a></li>
+    <li><a href="${pageContext.request.contextPath}/complex/">/complex/</a></li>
+    <li><a href="${pageContext.request.contextPath}/export/">/export/</a></li>
 </ul>
 </body>
 </html>
