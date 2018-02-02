@@ -348,11 +348,14 @@ public class SearchController {
     }
 
     private ResponseEntity<String> createJsonResponse(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, Boolean exportAsFile) {
+
         InteractionViewerJson.initialiseAllMIJsonWriters();
         MIJsonOptionFactory optionFactory = MIJsonOptionFactory.getInstance();
         StringWriter answer = new StringWriter();
+
         Map<String, Object> options = optionFactory.getJsonOptions(answer, InteractionCategory.modelled, null, MIJsonType.n_ary_only, null, null);
         InteractionWriter writer = writerFactory.getInteractionWriterWith(options);
+
         try {
             writer.start();
             writer.write(complexes);
