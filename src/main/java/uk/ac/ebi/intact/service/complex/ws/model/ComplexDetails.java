@@ -28,6 +28,7 @@ public class ComplexDetails {
     private Collection<String> functions;
     private Collection<String> properties;
     private String ac;
+    private String complexAc;
     private String name;
     private String species;
     private Collection<String> ligands;
@@ -80,7 +81,16 @@ public class ComplexDetails {
     public void setAc ( String id ) { this.ac = id; }
     @XmlElement
     public String getAc () { return this.ac; }
-    public void setName ( String n ) { this.name = n; }
+
+    public String getComplexAc() {
+        return complexAc;
+    }
+
+    public void setComplexAc(String complexAc) {
+        this.complexAc = complexAc;
+    }
+
+    public void setName (String n ) { this.name = n; }
     @XmlElement
     public String getName () { return this.name; }
     public void setSpecies ( String s ) { this.species = s; }
