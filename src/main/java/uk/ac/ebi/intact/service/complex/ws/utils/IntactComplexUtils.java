@@ -147,7 +147,12 @@ public class IntactComplexUtils {
                     BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
                     part.setName(bioactiveEntity.getShortName());
                     part.setIdentifier(bioactiveEntity.getChebi());
-                } else {
+                } else if (interactor instanceof Complex) {
+                    Complex complexParticipant = (Complex) interactor;
+                    part.setName(complexParticipant.getRecommendedName());
+                    part.setIdentifier(complexParticipant.getComplexAc());
+                }
+                else {
                     for (Xref x : interactor.getIdentifiers()) {
                         if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
                             part.setName(interactor.getShortName());
@@ -156,9 +161,10 @@ public class IntactComplexUtils {
                     }
                     if (part.getName() == null && part.getIdentifier() == null) {
                         part.setName(interactor.getShortName());
-                        part.setIdentifier(interactor.getFullName());
+                        part.setIdentifier(interactor.getPreferredIdentifier().getId());
                     }
                 }
+
                 Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
                 if (searchUrl != null) {
                     part.setIdentifierLink(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", part.getIdentifier()));
