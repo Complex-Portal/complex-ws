@@ -8,7 +8,7 @@
     <groupId>uk.ac.ebi.intact.service.complexportal</groupId>
     <artifactId>complex-ws</artifactId>
     <packaging>war</packaging>
-    <version>2.0.6</version>
+    <version>2.0.7</version>
     <name>complex-ws</name>
 
     <properties>
@@ -22,8 +22,8 @@
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
         <psi.jami.version>3.0.15</psi.jami.version>
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
-        <intact.jami.version>1.2.25</intact.jami.version>
-        <dataexchange.version>3.0.22</dataexchange.version>
+        <intact.jami.version>1.2.27</intact.jami.version>
+        <dataexchange.version>3.0.23</dataexchange.version>
     </properties>
 
     <scm>
@@ -219,7 +219,6 @@
     </dependencies>
 
     <build>
-        <finalName>complex-ws</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
