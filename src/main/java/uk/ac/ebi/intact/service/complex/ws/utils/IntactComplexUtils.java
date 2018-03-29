@@ -40,7 +40,7 @@ public class IntactComplexUtils {
 
     public static final String SEARCH = "search-url";
     public static final String SEARCH_MI = "MI:0615";
-    
+
     public static final String RNA_CENTRAL = "RNAcentral";
     public static final String RNA_CENTRAL_MI = "MI:1357";
 
@@ -95,8 +95,7 @@ public class IntactComplexUtils {
             cross.setDatabase(xref.getDatabase().getFullName());
             if (xref.getDatabase() instanceof OntologyTerm) {
                 OntologyTerm ontologyTerm = (OntologyTerm) xref.getDatabase();
-                if (ontologyTerm.getDefinition() != null)
-                    cross.setDbdefinition(ontologyTerm.getDefinition());
+                if (ontologyTerm.getDefinition() != null) cross.setDbdefinition(ontologyTerm.getDefinition());
             }
             cross.setDbMI(xref.getDatabase().getMIIdentifier());
         }
@@ -104,8 +103,7 @@ public class IntactComplexUtils {
             cross.setQualifier(xref.getQualifier().getFullName());
             if (xref.getQualifier() instanceof OntologyTerm) {
                 OntologyTerm ontologyTerm = (OntologyTerm) xref.getQualifier();
-                if (ontologyTerm.getDefinition() != null)
-                    cross.setQualifierDefinition(ontologyTerm.getDefinition());
+                if (ontologyTerm.getDefinition() != null) cross.setQualifierDefinition(ontologyTerm.getDefinition());
             }
             cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
         }
@@ -147,6 +145,10 @@ public class IntactComplexUtils {
                     BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
                     part.setName(bioactiveEntity.getShortName());
                     part.setIdentifier(bioactiveEntity.getChebi());
+                } else if (interactor instanceof Complex) {
+                    Complex complexParticipant = (Complex) interactor;
+                    part.setName(complexParticipant.getRecommendedName());
+                    part.setIdentifier(complexParticipant.getComplexAc());
                 } else {
                     for (Xref x : interactor.getIdentifiers()) {
                         if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
@@ -156,7 +158,7 @@ public class IntactComplexUtils {
                     }
                     if (part.getName() == null && part.getIdentifier() == null) {
                         part.setName(interactor.getShortName());
-                        part.setIdentifier(interactor.getFullName());
+                        part.setIdentifier(interactor.getPreferredIdentifier().getId());
                     }
                 }
                 Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
@@ -165,13 +167,11 @@ public class IntactComplexUtils {
                 }
                 if (participant.getStoichiometry().getMinValue() == 0 && participant.getStoichiometry().getMaxValue() == 0)
                     part.setStochiometry(null);
-                else
-                    part.setStochiometry(participant.getStoichiometry().toString());
+                else part.setStochiometry(participant.getStoichiometry().toString());
                 if (participant.getBiologicalRole() != null) {
                     setBiologicalRole(part, participant);
                 }
-            }
-            setFeatures(part, participant);
+            } setFeatures(part, participant);
             participants.add(part);
         }
     }
@@ -247,8 +247,7 @@ public class IntactComplexUtils {
         part.setInteractorTypeMI(term.getMIIdentifier());
         if (term instanceof OntologyTerm) {
             OntologyTerm ontologyTerm = (OntologyTerm) term;
-            if (ontologyTerm.getDefinition() != null)
-                part.setInteractorTypeDefinition(ontologyTerm.getDefinition());
+            if (ontologyTerm.getDefinition() != null) part.setInteractorTypeDefinition(ontologyTerm.getDefinition());
         }
     }
 
@@ -259,8 +258,7 @@ public class IntactComplexUtils {
         part.setBioRoleMI(term.getMIIdentifier());
         if (term instanceof OntologyTerm) {
             OntologyTerm ontologyTerm = (OntologyTerm) term;
-            if (ontologyTerm.getDefinition() != null)
-                part.setBioRoleDefinition(ontologyTerm.getDefinition());
+            if (ontologyTerm.getDefinition() != null) part.setBioRoleDefinition(ontologyTerm.getDefinition());
         }
     }
 
@@ -307,9 +305,9 @@ public class IntactComplexUtils {
     //
     public static List<String> getProperties(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_PROPERTIES_MI, COMPLEX_PROPERTIES);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> properties = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 properties.add(annotation.getValue());
             }
             return properties;
@@ -319,9 +317,9 @@ public class IntactComplexUtils {
 
     public static List<String> getDiseases(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_DISEASE_MI, COMPLEX_DISEASE);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> diseases = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 diseases.add(annotation.getValue());
             }
             return diseases;
@@ -331,9 +329,9 @@ public class IntactComplexUtils {
 
     public static List<String> getLigands(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_LIGAND_IA, COMPLEX_LIGAND);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> ligands = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 ligands.add(annotation.getValue());
             }
             return ligands;
@@ -343,9 +341,9 @@ public class IntactComplexUtils {
 
     public static List<String> getComplexAssemblies(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_ASSEMBLY_IA, COMPLEX_ASSEMBLY);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> complexAssemblies = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 complexAssemblies.add(annotation.getValue());
             }
             return complexAssemblies;
@@ -355,9 +353,9 @@ public class IntactComplexUtils {
 
     public static List<String> getFunctions(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), CURATED_COMPLEX_IA, CURATED_COMPLEX);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> functions = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 functions.add(annotation.getValue());
             }
             return functions;
@@ -367,9 +365,9 @@ public class IntactComplexUtils {
 
     public static List<String> getAgonists(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_AGONIST_MI, COMPLEX_AGONIST);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> agonists = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 agonists.add(annotation.getValue());
             }
             return agonists;
@@ -379,9 +377,9 @@ public class IntactComplexUtils {
 
     public static List<String> getAntagonists(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_ANTAGONIST_MI, COMPLEX_ANTAGONIST);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> antagonists = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 antagonists.add(annotation.getValue());
             }
             return antagonists;
@@ -391,9 +389,9 @@ public class IntactComplexUtils {
 
     public static List<String> getComments(IntactComplex complex) {
         Collection<Annotation> annotations = AnnotationUtils.collectAllAnnotationsHavingTopic(complex.getAnnotations(), COMPLEX_COMMENT_MI, COMPLEX_COMMENT);
-        if (annotations != null){
+        if (annotations != null) {
             List<String> comments = new ArrayList<String>();
-            for(Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 comments.add(annotation.getValue());
             }
             return comments;
