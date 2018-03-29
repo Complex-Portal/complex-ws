@@ -219,7 +219,6 @@
     </dependencies>
 
     <build>
-        <finalName>complex-ws</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
