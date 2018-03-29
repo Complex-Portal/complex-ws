@@ -95,7 +95,8 @@ public class IntactComplexUtils {
             cross.setDatabase(xref.getDatabase().getFullName());
             if (xref.getDatabase() instanceof OntologyTerm) {
                 OntologyTerm ontologyTerm = (OntologyTerm) xref.getDatabase();
-                if (ontologyTerm.getDefinition() != null) cross.setDbdefinition(ontologyTerm.getDefinition());
+                if (ontologyTerm.getDefinition() != null)
+                    cross.setDbdefinition(ontologyTerm.getDefinition());
             }
             cross.setDbMI(xref.getDatabase().getMIIdentifier());
         }
@@ -103,7 +104,8 @@ public class IntactComplexUtils {
             cross.setQualifier(xref.getQualifier().getFullName());
             if (xref.getQualifier() instanceof OntologyTerm) {
                 OntologyTerm ontologyTerm = (OntologyTerm) xref.getQualifier();
-                if (ontologyTerm.getDefinition() != null) cross.setQualifierDefinition(ontologyTerm.getDefinition());
+                if (ontologyTerm.getDefinition() != null)
+                    cross.setQualifierDefinition(ontologyTerm.getDefinition());
             }
             cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
         }
@@ -149,7 +151,8 @@ public class IntactComplexUtils {
                     Complex complexParticipant = (Complex) interactor;
                     part.setName(complexParticipant.getRecommendedName());
                     part.setIdentifier(complexParticipant.getComplexAc());
-                } else {
+                }
+                else{
                     for (Xref x : interactor.getIdentifiers()) {
                         if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
                             part.setName(interactor.getShortName());
@@ -161,17 +164,20 @@ public class IntactComplexUtils {
                         part.setIdentifier(interactor.getPreferredIdentifier().getId());
                     }
                 }
+
                 Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
                 if (searchUrl != null) {
                     part.setIdentifierLink(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", part.getIdentifier()));
                 }
                 if (participant.getStoichiometry().getMinValue() == 0 && participant.getStoichiometry().getMaxValue() == 0)
                     part.setStochiometry(null);
-                else part.setStochiometry(participant.getStoichiometry().toString());
+                else
+                    part.setStochiometry(participant.getStoichiometry().toString());
                 if (participant.getBiologicalRole() != null) {
                     setBiologicalRole(part, participant);
                 }
-            } setFeatures(part, participant);
+            }
+            setFeatures(part, participant);
             participants.add(part);
         }
     }
@@ -247,7 +253,8 @@ public class IntactComplexUtils {
         part.setInteractorTypeMI(term.getMIIdentifier());
         if (term instanceof OntologyTerm) {
             OntologyTerm ontologyTerm = (OntologyTerm) term;
-            if (ontologyTerm.getDefinition() != null) part.setInteractorTypeDefinition(ontologyTerm.getDefinition());
+            if (ontologyTerm.getDefinition() != null)
+                part.setInteractorTypeDefinition(ontologyTerm.getDefinition());
         }
     }
 
@@ -258,7 +265,8 @@ public class IntactComplexUtils {
         part.setBioRoleMI(term.getMIIdentifier());
         if (term instanceof OntologyTerm) {
             OntologyTerm ontologyTerm = (OntologyTerm) term;
-            if (ontologyTerm.getDefinition() != null) part.setBioRoleDefinition(ontologyTerm.getDefinition());
+            if (ontologyTerm.getDefinition() != null)
+                part.setBioRoleDefinition(ontologyTerm.getDefinition());
         }
     }
 
