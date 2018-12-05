@@ -13,13 +13,9 @@
 <body>
 <h2>Export method (Experimental state)</h2>
 <ul>
-    <li>Get Json format to visualize EBI-1163476: <a href="${pageContext.request.contextPath}/export/EBI-1163476">/export/EBI-1163476</a></li>
-    <li>Get miXML25 format to visualize EBI-1163476: <a href="${pageContext.request.contextPath}/export/EBI-1163476?format=xml25">/export/EBI-1163476?format=xml25</a></li>
-    <li>Get miXML30 format to visualize EBI-1163476: <a href="${pageContext.request.contextPath}/export/EBI-1163476?format=xml30">/export/EBI-1163476?format=xml30</a></li>
-    <p>New complex accessions</p>
-    <li>Get Json format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247">/export/CPX-3247</a></li>
-    <li>Get miXML25 format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247?format=xml25">/export/CPX-3247?format=xml25</a></li>
-    <li>Get miXML30 format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247?format=xml30">/export/CPX-3247?format=xml30</a></li>
+    <li>Get Json format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247">/export/CPX-376</a></li>
+    <li>Get miXML25 format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247?format=xml25">/export/CPX-376?format=xml25</a></li>
+    <li>Get miXML30 format to visualize CPX-3247: <a href="${pageContext.request.contextPath}/export/CPX-3247?format=xml30">/export/CPX-376?format=xml30</a></li>
 </ul>
 </body>
 </html>

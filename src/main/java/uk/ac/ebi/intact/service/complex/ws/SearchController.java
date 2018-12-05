@@ -31,14 +31,14 @@ import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
 import uk.ac.ebi.intact.dataexchange.psimi.xml.IntactPsiXml;
 import uk.ac.ebi.intact.jami.dao.IntactDao;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
-import uk.ac.ebi.intact.service.complex.ws.model.*;
+import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
+import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResult;
 import uk.ac.ebi.intact.service.complex.ws.utils.IntactComplexUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -353,7 +353,7 @@ public class SearchController {
         MIJsonOptionFactory optionFactory = MIJsonOptionFactory.getInstance();
         StringWriter answer = new StringWriter();
 
-        Map<String, Object> options = optionFactory.getJsonOptions(answer, InteractionCategory.modelled, null, MIJsonType.n_ary_only, null, null);
+        Map<String, Object> options = optionFactory.getJsonOptions(answer, InteractionCategory.modelled, ComplexType.n_ary, MIJsonType.n_ary_only, null, null);
         InteractionWriter writer = writerFactory.getInteractionWriterWith(options);
 
         try {
