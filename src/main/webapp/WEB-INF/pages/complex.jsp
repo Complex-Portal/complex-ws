@@ -15,6 +15,6 @@
 ** NOTE: default format in JSON. **
 This method is for query the data base with the new complexes identifiers. Then you have to specify an identifier in for query. Please find below different examples about that:
 <ul>
-    <li>Query for CPX-3409: <a href="${pageContext.request.contextPath}/complex/CPX-3409">/complex/CPX-3409</a></li></ul>
+    <li>Query for CPX-376: <a href="${pageContext.request.contextPath}/complex/CPX-376">/complex/CPX-376</a></li></ul>
 </body>
 </html>

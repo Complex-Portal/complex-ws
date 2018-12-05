@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- *  This class is to map the details of a complex retrieved from the DB
+ * This class is to map the details of a complex retrieved from the DB
  *
  * @author Oscar Forner (oforner@ebi.ac.uk)
  * @version $Id$
@@ -40,11 +40,11 @@ public class ComplexDetails {
     private Collection<String> agonists;
     private Collection<String> antagonists;
     private Collection<String> comments;
-    
-    
+
 
     /*************************/
     /*      Constructor      */
+
     /*************************/
     public ComplexDetails() {
         this.synonyms = new LinkedList<String>();
@@ -62,25 +62,56 @@ public class ComplexDetails {
 
     /*********************************/
     /*      Getters and Setters      */
+
+    @XmlElement
+    public String getSystematicName() {
+        return this.systematicName;
+    }
+
     /*********************************/
-    public void setSystematicName ( String systematic ) {
+    public void setSystematicName(String systematic) {
         this.systematicName = systematic;
     }
+
+    public void addSynonym(String syn) {
+        this.synonyms.add(syn);
+    }
+
     @XmlElement
-    public String getSystematicName () { return this.systematicName; }
-    public void setSynonyms ( List<String> syns ) { this.synonyms = syns; }
-    public void addSynonym ( String syn ) { this.synonyms.add(syn); }
+    public Collection<String> getSynonyms() {
+        return this.synonyms;
+    }
+
+    public void setSynonyms(List<String> syns) {
+        this.synonyms = syns;
+    }
+
     @XmlElement
-    public Collection<String> getSynonyms() { return this.synonyms; }
-    public void setFunctions(List<String> func) { this.functions = func; }
+    public Collection<String> getFunctions() {
+        return this.functions;
+    }
+
+    public void setFunctions(List<String> func) {
+        this.functions = func;
+    }
+
     @XmlElement
-    public Collection<String> getFunctions() { return this.functions; }
-    public void setProperties ( List<String> poper ) { this.properties = poper; }
+    public Collection<String> getProperties() {
+        return this.properties;
+    }
+
+    public void setProperties(List<String> poper) {
+        this.properties = poper;
+    }
+
     @XmlElement
-    public Collection<String> getProperties () { return this.properties; }
-    public void setAc ( String id ) { this.ac = id; }
-    @XmlElement
-    public String getAc () { return this.ac; }
+    public String getAc() {
+        return this.ac;
+    }
+
+    public void setAc(String id) {
+        this.ac = id;
+    }
 
     public String getComplexAc() {
         return complexAc;
@@ -90,24 +121,55 @@ public class ComplexDetails {
         this.complexAc = complexAc;
     }
 
-    public void setName (String n ) { this.name = n; }
     @XmlElement
-    public String getName () { return this.name; }
-    public void setSpecies ( String s ) { this.species = s; }
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String n) {
+        this.name = n;
+    }
+
     @XmlElement
-    public String getSpecies () { return this.species; }
+    public String getSpecies() {
+        return this.species;
+    }
+
+    public void setSpecies(String s) {
+        this.species = s;
+    }
+
     @XmlElement
-    public Collection<String> getLigands() { return ligands; }
-    public void setLigands(List<String> ligands) { this.ligands = ligands; }
+    public Collection<String> getLigands() {
+        return ligands;
+    }
+
+    public void setLigands(List<String> ligands) {
+        this.ligands = ligands;
+    }
+
     @XmlElement
-    public Collection<String> getComplexAssemblies() { return complexAssemblies; }
-    public void setComplexAssemblies(List<String> complexAssemblies) { this.complexAssemblies = complexAssemblies; }
+    public Collection<String> getComplexAssemblies() {
+        return complexAssemblies;
+    }
+
+    public void setComplexAssemblies(List<String> complexAssemblies) {
+        this.complexAssemblies = complexAssemblies;
+    }
+
     @XmlElement
-    public Collection<String> getDiseases() { return diseases; }
-    public void setDiseases(List<String> diseases) { this.diseases = diseases; }
+    public Collection<String> getDiseases() {
+        return diseases;
+    }
+
+    public void setDiseases(List<String> diseases) {
+        this.diseases = diseases;
+    }
+
     public Collection<ComplexDetailsParticipants> getParticipants() {
         return participants;
     }
+
     public Collection<ComplexDetailsCrossReferences> getCrossReferences() {
         return crossReferences;
     }
