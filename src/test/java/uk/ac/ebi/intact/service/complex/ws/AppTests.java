@@ -27,7 +27,7 @@ public class AppTests {
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired
     protected WebApplicationContext wac;
-    protected int numberOfComplexes = 2519; //You have to update this value
+    protected int numberOfComplexes = 2863; //You have to update this value
                                            //when you indexed new complexes
 
     @Before
