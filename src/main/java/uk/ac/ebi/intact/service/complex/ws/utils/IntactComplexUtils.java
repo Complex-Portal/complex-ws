@@ -135,13 +135,13 @@ public class IntactComplexUtils {
             Interactor interactor = participant.getInteractor();
 
             if (interactor != null) {
+                //TODO In principle this can now be replace by preferredName
                 setInteractorType(part, interactor);
                 part.setDescription(interactor.getFullName());
                 part.setInteractorAC(((IntactModelledParticipant) participant).getAc());
                 if (interactor instanceof Protein) {
                     Protein protein = (Protein) interactor;
-                    Alias alias = AliasUtils.collectFirstAliasWithType(protein.getAliases(), Alias.COMPLEX_SYNONYM_MI, Alias.COMPLEX_SYNONYM);
-                    part.setName(alias != null ? alias.getName() : protein.getGeneName());
+                    part.setName(protein.getGeneName() != null ? protein.getGeneName(): protein.getPreferredName());
                     part.setIdentifier(protein.getPreferredIdentifier().getId());
                 } else if (interactor instanceof BioactiveEntity) {
                     BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
