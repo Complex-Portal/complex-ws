@@ -145,7 +145,7 @@ public class SearchController {
      - Only listen request via GET never via POST.
      - Does not change the query.
      */
-    @RequestMapping(value = "/search/{query}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/search/{query}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> search(@PathVariable String query,
                                     @RequestParam (required = false) String first,
                                     @RequestParam (required = false) String number,
@@ -157,7 +157,7 @@ public class SearchController {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(writer, searchResult);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(headers);
         return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
@@ -172,7 +172,7 @@ public class SearchController {
      - Only listen request via GET never via POST.
      - Query the information in our database about the ac of the complex.
      */
-    @RequestMapping(value = "/details/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/details/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
     public ResponseEntity<String> retrieveComplex(@PathVariable String ac,
                                                   HttpServletResponse response) throws Exception {
@@ -186,7 +186,7 @@ public class SearchController {
         mapper.writeValue(writer, details);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
 
         enableCORS(headers);
@@ -200,7 +200,7 @@ public class SearchController {
     * Returns answer in json format
     *
     * */
-    @RequestMapping(value = "/complex/{complexAc}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/complex/{complexAc}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
     public ResponseEntity<String> retrieveComplexByAc(@PathVariable String complexAc,
                                                       HttpServletResponse response) throws Exception {
@@ -214,7 +214,7 @@ public class SearchController {
         mapper.writeValue(writer, details);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
 
         enableCORS(headers);
@@ -365,7 +365,7 @@ public class SearchController {
             writer.close();
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(httpHeaders);
         if (exportAsFile) {
