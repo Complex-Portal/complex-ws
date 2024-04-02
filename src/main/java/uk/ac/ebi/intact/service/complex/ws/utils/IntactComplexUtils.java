@@ -139,40 +139,11 @@ public class IntactComplexUtils {
                 setInteractorType(part, interactor);
                 part.setDescription(interactor.getFullName());
                 part.setInteractorAC(((IntactModelledParticipant) participant).getAc());
-                if (interactor instanceof Protein) {
-                    Protein protein = (Protein) interactor;
-                    part.setName(protein.getGeneName() != null ? protein.getGeneName(): protein.getPreferredName());
-                    part.setIdentifier(protein.getPreferredIdentifier().getId());
-                } else if (interactor instanceof BioactiveEntity) {
-                    BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
-                    part.setName(bioactiveEntity.getShortName());
-                    part.setIdentifier(bioactiveEntity.getChebi());
-                } else if (interactor instanceof Complex) {
-                    Complex complexParticipant = (Complex) interactor;
-                    part.setName(complexParticipant.getRecommendedName());
-                    part.setIdentifier(complexParticipant.getComplexAc());
-                }
-                else{
-                    for (Xref x : interactor.getIdentifiers()) {
-                        if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
-                            part.setName(interactor.getShortName());
-                            part.setIdentifier(x.getId());
-                        }
-                    }
-                    if (part.getName() == null && part.getIdentifier() == null) {
-                        part.setName(interactor.getShortName());
-                        part.setIdentifier(interactor.getPreferredIdentifier().getId());
-                    }
-                }
-
-                Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
-                if (searchUrl != null) {
-                    part.setIdentifierLink(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", part.getIdentifier()));
-                }
-                if (participant.getStoichiometry().getMinValue() == 0 && participant.getStoichiometry().getMaxValue() == 0)
-                    part.setStochiometry(null);
-                else
-                    part.setStochiometry(participant.getStoichiometry().toString());
+                String identifier = getParticipantIdentifier(participant);
+                part.setName(getParticipantName(participant));
+                part.setIdentifier(identifier);
+                part.setIdentifierLink(getParticipantIdentifierLink(participant, identifier));
+                part.setStochiometry(getParticipantStoichiometry(participant));
                 if (participant.getBiologicalRole() != null) {
                     setBiologicalRole(part, participant);
                 }
@@ -182,17 +153,12 @@ public class IntactComplexUtils {
         }
     }
 
-    private static Collection<ModelledParticipant> mergeParticipants(Collection<ModelledParticipant> participants) {
+    public static Collection<ModelledParticipant> mergeParticipants(Collection<ModelledParticipant> participants) {
         if (participants.size() > 1) {
-            Comparator<ModelledParticipant> comparator = new Comparator<ModelledParticipant>() {
-                @Override
-                public int compare(ModelledParticipant o1, ModelledParticipant o2) {
-                    return (((IntactInteractor) o1.getInteractor()).getAc().compareTo(((IntactInteractor) o2.getInteractor()).getAc()));
-                }
-            };
+            Comparator<ModelledParticipant> comparator = Comparator.comparing(o -> ((IntactInteractor) o.getInteractor()).getAc());
             List<ModelledParticipant> participantList = (List<ModelledParticipant>) participants;
-            Collections.sort(participantList, comparator);
-            Collection<ModelledParticipant> merged = new ArrayList<ModelledParticipant>();
+            participantList.sort(comparator);
+            Collection<ModelledParticipant> merged = new ArrayList<>();
             ModelledParticipant aux = participantList.get(0);
             int stochiometry = 0;
             for (ModelledParticipant participant : participantList) {
@@ -407,4 +373,69 @@ public class IntactComplexUtils {
         return null;
     }
 
+    public static String getParticipantName(ModelledParticipant participant) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null) {
+            if (interactor instanceof Protein) {
+                Protein protein = (Protein) interactor;
+                return protein.getGeneName() != null ? protein.getGeneName(): protein.getPreferredName();
+            } else if (interactor instanceof BioactiveEntity) {
+                BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
+                return bioactiveEntity.getShortName();
+            } else if (interactor instanceof Complex) {
+                Complex complexParticipant = (Complex) interactor;
+                return complexParticipant.getRecommendedName();
+            } else {
+                for (Xref x : interactor.getIdentifiers()) {
+                    if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
+                        return interactor.getShortName();
+                    }
+                }
+            }
+            return interactor.getShortName();
+        }
+        return null;
+    }
+
+    public static String getParticipantIdentifier(ModelledParticipant participant) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null) {
+            if (interactor instanceof Protein) {
+                Protein protein = (Protein) interactor;
+                return protein.getPreferredIdentifier().getId();
+            } else if (interactor instanceof BioactiveEntity) {
+                BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
+                return bioactiveEntity.getChebi();
+            } else if (interactor instanceof Complex) {
+                Complex complexParticipant = (Complex) interactor;
+                return complexParticipant.getComplexAc();
+            } else {
+                for (Xref x : interactor.getIdentifiers()) {
+                    if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
+                        return x.getId();
+                    }
+                }
+            }
+            return interactor.getPreferredIdentifier().getId();
+        }
+        return null;
+    }
+
+    public static String getParticipantIdentifierLink(ModelledParticipant participant, String identifier) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null && identifier != null) {
+            Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+            if (searchUrl != null) {
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", identifier);
+            }
+        }
+        return null;
+    }
+
+    public static String getParticipantStoichiometry(ModelledParticipant participant) {
+        if (participant.getStoichiometry().getMinValue() != 0 || participant.getStoichiometry().getMaxValue() != 0) {
+            return participant.getStoichiometry().toString();
+        }
+        return null;
+    }
 }
