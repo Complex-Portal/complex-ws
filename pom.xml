@@ -21,10 +21,10 @@
 
         <spring.version>4.3.30.RELEASE</spring.version>
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
-        <psi.jami.version>3.5.0</psi.jami.version>
+        <psi.jami.version>3.5.1-SNAPSHOT</psi.jami.version>
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
         <intact.jami.version>2.2.6</intact.jami.version>
-        <dataexchange.version>3.3.1</dataexchange.version>
+        <dataexchange.version>3.4.0-SNAPSHOT</dataexchange.version>
     </properties>
 
     <scm>

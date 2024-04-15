@@ -26,25 +26,21 @@ import psidev.psi.mi.jami.json.MIJsonOptionFactory;
 import psidev.psi.mi.jami.json.MIJsonType;
 import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
-import psidev.psi.mi.jami.model.Interactor;
 import psidev.psi.mi.jami.model.ModelledParticipant;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
+import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexInteractor;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
 import uk.ac.ebi.intact.dataexchange.psimi.xml.IntactPsiXml;
 import uk.ac.ebi.intact.jami.dao.IntactDao;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
-import uk.ac.ebi.intact.service.complex.ws.model.ComplexParticipant;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResult;
-import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResultV2;
-import uk.ac.ebi.intact.service.complex.ws.model.ComplexSearchResultV2;
 import uk.ac.ebi.intact.service.complex.ws.utils.IntactComplexUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -165,8 +161,8 @@ public class SearchController {
         ObjectMapper mapper = new ObjectMapper();
         ComplexRestResult searchResult = query(query, first, number, filters, facets);
         try {
-            ComplexRestResultV2 searchResultV2 = enrichQueryResults(searchResult, query, first, number);
-            mapper.writeValue(writer, searchResultV2);
+            ComplexRestResult enrichedSearchResult = enrichQueryResults(searchResult, query, first, number);
+            mapper.writeValue(writer, enrichedSearchResult);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -392,21 +388,6 @@ public class SearchController {
     /*******************************/
     /*      Protected methods      */
     /*******************************/
-    private Map<String, ComplexSearchResultV2> queryDb(String query) {
-        Map<String, ComplexSearchResultV2> complexes = new HashMap<>();
-        String[] queries = query.split("[,\\s]");
-        for (String singleQuery: queries) {
-            String trimmedQuery = singleQuery.trim();
-            if (trimmedQuery.matches("CPX-[0-9]+")) {
-                IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(trimmedQuery);
-                if (complex != null) {
-                    complexes.put(complex.getComplexAc(), mapComplex(complex));
-                }
-            }
-        }
-        return complexes;
-    }
-
     // This method controls the first and number parameters and retrieve data
     protected ComplexRestResult query(String query, String first, String number, String filters, String facets) throws SolrServerException {
         // Get parameters (if we have them)
@@ -423,10 +404,10 @@ public class SearchController {
         return this.dataProvider.getData( query, f, n, filters , facets);
     }
 
-    private ComplexRestResultV2 enrichQueryResults(ComplexRestResult searchResult,
-                                                   String query,
-                                                   String first,
-                                                   String number) {
+    private ComplexRestResult enrichQueryResults(ComplexRestResult searchResult,
+                                                 String query,
+                                                 String first,
+                                                 String number) {
         // Get parameters (if we have them)
         int f, n;
         // If we have first parameter parse it to integer
@@ -439,11 +420,8 @@ public class SearchController {
         else n = Integer.MAX_VALUE - f;
 
         long size = searchResult.getSize();
-        long totalNumberOfResults = searchResult.getTotalNumberOfResults();
 
-        List<ComplexSearchResultV2> complexes = new ArrayList<>();
-        searchResult.getElements().stream().map(this::enrichComplexSearchResult).forEach(complexes::add);
-
+        // TODO: remove this before pushing these changes to prod
         if (size < n) {
             Set<String> complexAcsFromSolr = searchResult.getElements().stream()
                     .map(ComplexSearchResults::getComplexAC)
@@ -456,16 +434,14 @@ public class SearchController {
                     if (!complexAcsFromSolr.contains(trimmedQuery)) {
                         IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(trimmedQuery);
                         if (complex != null) {
-                            complexes.add(mapComplex(complex));
-                            size++;
-                            totalNumberOfResults++;
+                            searchResult.add(mapComplex(complex));
                         }
                     }
                 }
             }
         }
 
-        return new ComplexRestResultV2(size, totalNumberOfResults, complexes, searchResult.getFacets());
+        return searchResult;
     }
 
     // This method is to force to query only for a list of fields
@@ -491,45 +467,33 @@ public class SearchController {
         response.addHeader("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
     }
 
-    private ComplexSearchResultV2 mapComplex(IntactComplex complex) {
-        ComplexSearchResultV2 complexSearchResultV2 = new ComplexSearchResultV2();
-        complexSearchResultV2.setComplexAC(complex.getComplexAc());
-        complexSearchResultV2.setComplexName(IntactComplexUtils.getComplexName(complex));
-        complexSearchResultV2.setOrganismName(IntactComplexUtils.getSpeciesName(complex));
+    private ComplexSearchResults mapComplex(IntactComplex complex) {
+        ComplexSearchResults complexSearchResults = new ComplexSearchResults();
+        complexSearchResults.setComplexAC(complex.getComplexAc());
+        complexSearchResults.setComplexName(IntactComplexUtils.getComplexName(complex));
+        complexSearchResults.setOrganismName(IntactComplexUtils.getSpeciesName(complex));
         List<String> complexFunctions = IntactComplexUtils.getFunctions(complex);
         if (complexFunctions != null) {
-            complexSearchResultV2.setDescription(String.join(" ", complexFunctions));
+            complexSearchResults.setDescription(String.join(" ", complexFunctions));
         }
-        complexSearchResultV2.setComponents(createComplexParticipants(complex));
-        return complexSearchResultV2;
+        complexSearchResults.setInteractors(createComplexParticipants(complex));
+        return complexSearchResults;
     }
 
-    private ComplexSearchResultV2 enrichComplexSearchResult(ComplexSearchResults complexSearchResult) {
-        IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(complexSearchResult.getComplexAC());
-        ComplexSearchResultV2 complexSearchResultV2 = new ComplexSearchResultV2();
-        complexSearchResultV2.setComplexAC(complexSearchResult.getComplexAC());
-        complexSearchResultV2.setComplexName(complexSearchResult.getComplexName());
-        complexSearchResultV2.setOrganismName(complexSearchResult.getOrganismName());
-        complexSearchResultV2.setDescription(complexSearchResult.getDescription());
-        complexSearchResultV2.setComponents(createComplexParticipants(complex));
-        return complexSearchResultV2;
-    }
-
-    private List<ComplexParticipant> createComplexParticipants(IntactComplex complex) {
-        List<ComplexParticipant> participants = new ArrayList<>();
+    private List<ComplexInteractor> createComplexParticipants(IntactComplex complex) {
+        List<ComplexInteractor> interactors = new ArrayList<>();
         for (ModelledParticipant modelledParticipant : IntactComplexUtils.mergeParticipants(complex.getParticipants())) {
-            Interactor interactor = modelledParticipant.getInteractor();
-            ComplexParticipant participant = new ComplexParticipant();
+            ComplexInteractor interactor = new ComplexInteractor();
             String identifier = IntactComplexUtils.getParticipantIdentifier(modelledParticipant);
-            participant.setIdentifier(identifier);
-            participant.setIdentifierLink(IntactComplexUtils.getParticipantIdentifierLink(modelledParticipant, identifier));
-            participant.setName(IntactComplexUtils.getParticipantName(modelledParticipant));
-            participant.setDescription(interactor.getFullName());
-            participant.setStochiometry(IntactComplexUtils.getParticipantStoichiometry(modelledParticipant));
-            participant.setInteractorType(interactor.getInteractorType().getFullName());
-            participants.add(participant);
+            interactor.setIdentifier(identifier);
+            interactor.setIdentifierLink(IntactComplexUtils.getParticipantIdentifierLink(modelledParticipant, identifier));
+            interactor.setName(IntactComplexUtils.getParticipantName(modelledParticipant));
+            interactor.setDescription(modelledParticipant.getInteractor().getFullName());
+            interactor.setStochiometry(IntactComplexUtils.getParticipantStoichiometry(modelledParticipant));
+            interactor.setInteractorType(modelledParticipant.getInteractor().getInteractorType().getFullName());
+            interactors.add(interactor);
         }
-        return participants;
+        return interactors;
     }
 
     @ExceptionHandler(SolrServerException.class)

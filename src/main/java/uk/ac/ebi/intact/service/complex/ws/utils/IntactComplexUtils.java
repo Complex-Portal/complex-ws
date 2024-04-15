@@ -7,6 +7,7 @@ import psidev.psi.mi.jami.utils.RangeUtils;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.jami.model.extension.IntactInteractor;
 import uk.ac.ebi.intact.jami.model.extension.IntactModelledParticipant;
+import uk.ac.ebi.intact.jami.model.extension.IntactStoichiometry;
 import uk.ac.ebi.intact.jami.model.extension.InteractorXref;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsCrossReferences;
@@ -160,20 +161,23 @@ public class IntactComplexUtils {
             participantList.sort(comparator);
             Collection<ModelledParticipant> merged = new ArrayList<>();
             ModelledParticipant aux = participantList.get(0);
-            int stochiometry = 0;
+            int minStochiometry = 0;
+            int maxStochiometry = 0;
             for (ModelledParticipant participant : participantList) {
                 if (((IntactInteractor) aux.getInteractor()).getAc().equals(((IntactInteractor) participant.getInteractor()).getAc())) {
                     //Same
-                    stochiometry += participant.getStoichiometry().getMinValue();
+                    minStochiometry += participant.getStoichiometry().getMinValue();
+                    maxStochiometry += participant.getStoichiometry().getMaxValue();
                 } else {
                     //Different
-                    aux.setStoichiometry(stochiometry);
+                    aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
                     merged.add(aux);
                     aux = participant;
-                    stochiometry = aux.getStoichiometry().getMinValue();
+                    minStochiometry = aux.getStoichiometry().getMinValue();
+                    maxStochiometry = aux.getStoichiometry().getMaxValue();
                 }
             }
-            aux.setStoichiometry(stochiometry);
+            aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
             merged.add(aux);
             return merged;
         } else {
