@@ -28,6 +28,7 @@ import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.model.ModelledParticipant;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
+import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexFieldNames;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexInteractor;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
 import uk.ac.ebi.intact.dataexchange.psimi.xml.IntactPsiXml;
@@ -173,6 +174,26 @@ public class SearchController {
         enableCORS(headers);
         return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
 	}
+
+    @RequestMapping(value = "/complex-simplified/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
+    public ResponseEntity<String> retrieveComplexByAcFromSolr(@PathVariable String ac,
+                                                              HttpServletResponse response) throws SolrServerException, IOException {
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            ComplexSearchResults enrichedSearchResult = getComplexSearchResultsFromSolrOrDb(ac);
+            mapper.writeValue(writer, enrichedSearchResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+        enableCORS(headers);
+        return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
+    }
 
     /*
      - We can access to that method using:
@@ -402,6 +423,25 @@ public class SearchController {
         else n = Integer.MAX_VALUE - f;
         // Retrieve data using that parameters and return it
         return this.dataProvider.getData( query, f, n, filters , facets);
+    }
+
+    private ComplexSearchResults getComplexSearchResultsFromSolrOrDb(String ac) throws SolrServerException {
+        // Search in SOLR using COMPLEX_ID (indexed complex AC) to only retrieve the specific complex
+        ComplexRestResult searchResult = query(ComplexFieldNames.COMPLEX_ID + ":" + ac, null, null, null, null);
+
+        for (ComplexSearchResults searchResults: searchResult.getElements()) {
+            if (searchResults.getComplexAC().equals(ac)) {
+                return searchResults;
+            }
+        }
+
+        // If complex was not found in SOLR, for whatever reason, we load it from the DB
+        IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(ac);
+        if (complex != null) {
+            return mapComplex(complex);
+        }
+
+        return null;
     }
 
     private ComplexRestResult enrichQueryResults(ComplexRestResult searchResult,
