@@ -57,6 +57,12 @@ public class ComplexRestResult {
         }
     }
 
+    public void add(ComplexSearchResults complexResult) {
+        this.size++;
+        this.totalNumberOfResults++;
+        this.elements.add(complexResult);
+    }
+
     /*********************/
     /*      Getters      */
     /*********************/
