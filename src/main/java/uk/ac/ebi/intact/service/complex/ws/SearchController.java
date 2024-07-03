@@ -359,11 +359,12 @@ public class SearchController {
     }
     @RequestMapping(value = "/find", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
-    public ResponseEntity<String> findComplexMatches(@RequestParam(name = "proteinAc") List<String> proteinAcs,
+    public ResponseEntity<String> findComplexMatches(@RequestParam("proteinAcs") List<String> proteinAcs,
                                                      HttpServletResponse response) throws Exception {
 
         List<String> parsedProteinAcs = proteinAcs.stream()
                 .flatMap(proteinAc -> Stream.of(proteinAc.split(",")))
+                .map(String::trim)
                 .collect(Collectors.toList());
 
         ComplexFinderResult<IntactComplex> complexFinderResult = complexFinder.findComplexWithMatchingProteins(parsedProteinAcs);
