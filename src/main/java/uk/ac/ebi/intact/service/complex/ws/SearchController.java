@@ -28,6 +28,8 @@ import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.model.ModelledParticipant;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
+import uk.ac.ebi.complex.service.ComplexFinder;
+import uk.ac.ebi.complex.service.ComplexFinderResult;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexFieldNames;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexInteractor;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Controller
 public class SearchController {
@@ -83,12 +86,18 @@ public class SearchController {
     /*      Private attributes      */
     /********************************/
 
-    @Autowired
+
     private DataProvider dataProvider;
+    private IntactDao intactDao;
+    private ComplexFinder complexFinder;
 
     @Autowired
-    @Qualifier("intactDao")
-    private IntactDao intactDao;
+    public SearchController(DataProvider dataProvider,
+                            @Qualifier("intactDao") IntactDao intactDao) {
+        this.dataProvider = dataProvider;
+        this.intactDao = intactDao;
+        this.complexFinder = new ComplexFinder(intactDao);
+    }
 
     private static final Log log = LogFactory.getLog(SearchController.class);
 
@@ -125,6 +134,12 @@ public class SearchController {
     public String showExportHelp(HttpServletResponse response){
         enableClacks(response);
         return "export";
+    }
+
+    @RequestMapping(value = "/find/", method = RequestMethod.GET)
+    public String showFindHelp(HttpServletResponse response){
+        enableClacks(response);
+        return "find";
     }
 
     @RequestMapping(value = "/count/{query}", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
@@ -255,32 +270,32 @@ public class SearchController {
     }
 
     private ComplexDetails createComplexDetails(IntactComplex complex) throws Exception {
-
-        ComplexDetails details = new ComplexDetails();
-
         if (complex != null) {
-            details.setAc(complex.getAc());
-            details.setComplexAc(complex.getComplexAc());
-            details.setFunctions(IntactComplexUtils.getFunctions(complex));
-            details.setProperties(IntactComplexUtils.getProperties(complex));
-            details.setDiseases(IntactComplexUtils.getDiseases(complex));
-            details.setLigands(IntactComplexUtils.getLigands(complex));
-            details.setComplexAssemblies(IntactComplexUtils.getComplexAssemblies(complex));
-            details.setName(IntactComplexUtils.getComplexName(complex));
-            details.setSynonyms(IntactComplexUtils.getComplexSynonyms(complex));
-            details.setSystematicName(IntactComplexUtils.getSystematicName(complex));
-            details.setSpecies(IntactComplexUtils.getSpeciesName(complex) + "; " + IntactComplexUtils.getSpeciesTaxId(complex));
-            details.setInstitution(complex.getSource().getShortName());
-            details.setAgonists(IntactComplexUtils.getAgonists(complex));
-            details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
-            details.setComments(IntactComplexUtils.getComments(complex));
-
-            IntactComplexUtils.setParticipants(complex, details);
-            IntactComplexUtils.setCrossReferences(complex, details);
+            return newComplexDetails(complex);
         } else {
             throw new Exception();
         }
+    }
 
+    private ComplexDetails newComplexDetails(IntactComplex complex) {
+        ComplexDetails details = new ComplexDetails();
+        details.setAc(complex.getAc());
+        details.setComplexAc(complex.getComplexAc());
+        details.setFunctions(IntactComplexUtils.getFunctions(complex));
+        details.setProperties(IntactComplexUtils.getProperties(complex));
+        details.setDiseases(IntactComplexUtils.getDiseases(complex));
+        details.setLigands(IntactComplexUtils.getLigands(complex));
+        details.setComplexAssemblies(IntactComplexUtils.getComplexAssemblies(complex));
+        details.setName(IntactComplexUtils.getComplexName(complex));
+        details.setSynonyms(IntactComplexUtils.getComplexSynonyms(complex));
+        details.setSystematicName(IntactComplexUtils.getSystematicName(complex));
+        details.setSpecies(IntactComplexUtils.getSpeciesName(complex) + "; " + IntactComplexUtils.getSpeciesTaxId(complex));
+        details.setInstitution(complex.getSource().getShortName());
+        details.setAgonists(IntactComplexUtils.getAgonists(complex));
+        details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
+        details.setComments(IntactComplexUtils.getComments(complex));
+        IntactComplexUtils.setParticipants(complex, details);
+        IntactComplexUtils.setCrossReferences(complex, details);
         return details;
     }
 
@@ -341,6 +356,33 @@ public class SearchController {
             return responseEntity;
         }
         throw new Exception("Export failed " + query + ". No complexes result");
+    }
+    @RequestMapping(value = "/find", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
+    public ResponseEntity<String> findComplexMatches(@RequestParam(name = "proteinAc") List<String> proteinAcs,
+                                                     HttpServletResponse response) throws Exception {
+
+        List<String> parsedProteinAcs = proteinAcs.stream()
+                .flatMap(proteinAc -> Stream.of(proteinAc.split(",")))
+                .collect(Collectors.toList());
+
+        ComplexFinderResult<IntactComplex> complexFinderResult = complexFinder.findComplexWithMatchingProteins(parsedProteinAcs);
+        ComplexFinderResult<ComplexDetails> complexFinderResponse = new ComplexFinderResult<>(
+                complexFinderResult.getProteins(),
+                complexFinderResult.getExactMatches().stream().map(this::mapComplexMatch).collect(Collectors.toList()),
+                complexFinderResult.getPartialMatches().stream().map(this::mapComplexMatch).collect(Collectors.toList()));
+
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(writer, complexFinderResponse);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+
+        enableCORS(headers);
+
+        return new ResponseEntity<>(writer.toString(), headers, HttpStatus.OK);
     }
 
     private boolean isQueryASingleId(String query) {
@@ -534,6 +576,19 @@ public class SearchController {
             interactors.add(interactor);
         }
         return interactors;
+    }
+
+    private ComplexFinderResult.ComplexMatch<ComplexDetails> mapComplexMatch(
+            ComplexFinderResult.ComplexMatch<IntactComplex> complexMatch) {
+
+        return new ComplexFinderResult.ComplexMatch<>(
+                complexMatch.getComplexAc(),
+                complexMatch.getMatchType(),
+                complexMatch.getSimilarity(),
+                complexMatch.getMatchingProteins(),
+                complexMatch.getExtraProteins(),
+                complexMatch.getMissingProteins(),
+                newComplexDetails(complexMatch.getComplex()));
     }
 
     @ExceptionHandler(SolrServerException.class)
