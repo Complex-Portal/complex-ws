@@ -9,7 +9,7 @@
     <groupId>uk.ac.ebi.intact.service.complexportal</groupId>
     <artifactId>complex-ws</artifactId>
     <packaging>war</packaging>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <name>complex-ws</name>
 
     <properties>
@@ -21,7 +21,7 @@
 
         <spring.version>4.3.30.RELEASE</spring.version>
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
-        <psi.jami.version>3.5.2-SNAPSHOT</psi.jami.version>
+        <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
         <!--The version needs to be the same than in intact-dataexchange to avoid problems-->
         <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>
         <dataexchange.version>4.0.2-SNAPSHOT</dataexchange.version>
