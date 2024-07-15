@@ -370,8 +370,8 @@ public class SearchController {
         ComplexFinderResult<IntactComplex> complexFinderResult = complexFinder.findComplexWithMatchingProteins(parsedProteinAcs);
         ComplexFinderResult<ComplexDetails> complexFinderResponse = new ComplexFinderResult<>(
                 complexFinderResult.getProteins(),
-                complexFinderResult.getExactMatches().stream().map(this::mapComplexMatch).collect(Collectors.toList()),
-                complexFinderResult.getPartialMatches().stream().map(this::mapComplexMatch).collect(Collectors.toList()));
+                complexFinderResult.getExactMatches().stream().map(this::mapExactMatch).collect(Collectors.toList()),
+                complexFinderResult.getPartialMatches().stream().map(this::mapPartialMatch).collect(Collectors.toList()));
 
         StringWriter writer = new StringWriter();
         ObjectMapper mapper = new ObjectMapper();
@@ -579,16 +579,24 @@ public class SearchController {
         return interactors;
     }
 
-    private ComplexFinderResult.ComplexMatch<ComplexDetails> mapComplexMatch(
-            ComplexFinderResult.ComplexMatch<IntactComplex> complexMatch) {
+    private ComplexFinderResult.ExactMatch<ComplexDetails> mapExactMatch(
+            ComplexFinderResult.ExactMatch<IntactComplex> complexMatch) {
 
-        return new ComplexFinderResult.ComplexMatch<>(
+        return new ComplexFinderResult.ExactMatch<>(
                 complexMatch.getComplexAc(),
                 complexMatch.getMatchType(),
-                complexMatch.getSimilarity(),
+                newComplexDetails(complexMatch.getComplex()));
+    }
+
+    private ComplexFinderResult.PartialMatch<ComplexDetails> mapPartialMatch(
+            ComplexFinderResult.PartialMatch<IntactComplex> complexMatch) {
+
+        return new ComplexFinderResult.PartialMatch<>(
+                complexMatch.getComplexAc(),
+                complexMatch.getMatchType(),
                 complexMatch.getMatchingProteins(),
-                complexMatch.getExtraProteins(),
-                complexMatch.getMissingProteins(),
+                complexMatch.getExtraProteinsInComplex(),
+                complexMatch.getProteinMissingInComplex(),
                 newComplexDetails(complexMatch.getComplex()));
     }
 
