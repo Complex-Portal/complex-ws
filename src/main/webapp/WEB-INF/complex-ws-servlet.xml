@@ -54,6 +54,7 @@
                 <prop key="hibernate.generate_statistics">true</prop>
                 <prop key="hibernate.format_sql">false</prop>
                 <prop key="hibernate.hbm2ddl.auto">${db.hbm2ddl}</prop>
+                <prop key="hibernate.default_schema">intact</prop>
             </props>
         </property>
         <property name="jpaVendorAdapter">
@@ -64,13 +65,17 @@
             </bean>
         </property>
     </bean>
+
     <!-- Intact core basic datasource -->
-    <bean id="jamiCoreDataSource" class="org.apache.commons.dbcp.BasicDataSource">
-        <property name="driverClassName" value="${db.driver}"/>
-        <property name="url" value="${db.url}"/>
-        <property name="username" value="${db.user}"/>
-        <property name="password" value="${db.password}"/>
+    <bean id="jamiCoreDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:comp/env/${db.jndi}"/>
     </bean>
+<!--    <bean id="jamiCoreDataSource" class="org.apache.commons.dbcp.BasicDataSource">-->
+<!--        <property name="driverClassName" value="${db.driver}"/>-->
+<!--        <property name="url" value="${db.url}"/>-->
+<!--        <property name="username" value="${db.user}"/>-->
+<!--        <property name="password" value="${db.password}"/>-->
+<!--    </bean>-->
 
     <!-- INTACT more specific beans -->
     <bean id="jamiUserContext" class="uk.ac.ebi.intact.jami.context.UserContext" scope="prototype">
@@ -196,10 +201,6 @@
                 <!--<property name="generateDdl" value="false"/>-->
             <!--</bean>-->
         <!--</property>-->
-    <!--</bean>-->
-
-    <!--<bean id="intactComplexDataSourceJNDI" class="org.springframework.jndi.JndiObjectFactoryBean">-->
-        <!--<property name="jndiName" value="java:comp/env/${db.jndi}"/>-->
     <!--</bean>-->
 
     <!-- Spring specific -->
