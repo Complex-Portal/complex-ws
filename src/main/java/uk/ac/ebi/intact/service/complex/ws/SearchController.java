@@ -294,6 +294,8 @@ public class SearchController {
         details.setAgonists(IntactComplexUtils.getAgonists(complex));
         details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
         details.setComments(IntactComplexUtils.getComments(complex));
+        details.setEvidenceType(complex.getEvidenceType().getShortName());
+        details.setPredictedComplex(complex.isPredictedComplex());
         IntactComplexUtils.setParticipants(complex, details);
         IntactComplexUtils.setCrossReferences(complex, details);
         return details;
