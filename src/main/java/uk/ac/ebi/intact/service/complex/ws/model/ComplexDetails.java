@@ -41,7 +41,7 @@ public class ComplexDetails {
     private Collection<String> antagonists;
     private Collection<String> comments;
     private boolean predictedComplex;
-    private String evidenceType;
+    private ComplexDetailsEvidenceType evidenceType;
 
     /*************************/
     /*      Constructor      */
@@ -207,11 +207,11 @@ public class ComplexDetails {
         this.comments = comments;
     }
 
-    public String getEvidenceType() {
+    public ComplexDetailsEvidenceType getEvidenceType() {
         return evidenceType;
     }
 
-    public void setEvidenceType(String evidenceType) {
+    public void setEvidenceType(ComplexDetailsEvidenceType evidenceType) {
         this.evidenceType = evidenceType;
     }
 

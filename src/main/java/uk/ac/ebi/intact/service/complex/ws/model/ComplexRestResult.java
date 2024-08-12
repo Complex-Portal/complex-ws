@@ -1,8 +1,8 @@
 package uk.ac.ebi.intact.service.complex.ws.model;
 
-import org.apache.solr.client.solrj.response.FacetField;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexResultIterator;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
+import uk.ac.ebi.intact.service.complex.ws.FilterManager;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,18 +39,8 @@ public class ComplexRestResult {
     /***************************/
     public void add( ComplexResultIterator iterator ) {
         this.size += iterator.getNumberOfResults();
-        if ( this.facets == null && iterator != null && iterator.getFacetFields() != null ) {
-            this.facets = new HashMap<String, List<ComplexFacetResults>>();
-            Map<String, List<FacetField.Count>> map = iterator.getFacetFields();
-            for ( String field : map.keySet() ) {
-                if ( map.get(field) != null ) {
-                    List<ComplexFacetResults> list = new ArrayList<ComplexFacetResults>();
-                    for (FacetField.Count count : map.get(field) ){
-                        list.add( new ComplexFacetResults(count.getName(), count.getCount()));
-                    }
-                    this.facets.put(field, list);
-                }
-            }
+        if ( this.facets == null && iterator.getFacetFields() != null ) {
+            this.facets = FilterManager.mapFacetsResponse(iterator.getFacetFields());
         }
         while ( iterator.hasNext() ) {
             this.elements.add( iterator.next() );
