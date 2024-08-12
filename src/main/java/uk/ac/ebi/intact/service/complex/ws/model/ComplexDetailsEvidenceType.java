@@ -14,7 +14,7 @@ public class ComplexDetailsEvidenceType {
     private String identifier;
     private String description;
     private String searchURL;
-    private Integer stars;
+    private Integer confidenceScore;
 
     /**************************/
     /*      Constructors      */
@@ -24,13 +24,13 @@ public class ComplexDetailsEvidenceType {
         this.identifier  = null;
         this.description = null;
         this.searchURL = null;
-        this.stars = null;
+        this.confidenceScore = null;
     }
 
-    public ComplexDetailsEvidenceType(String identifier, String description, Integer stars) {
+    public ComplexDetailsEvidenceType(String identifier, String description, Integer confidenceScore) {
         this.identifier = identifier;
         this.description = description;
-        this.stars = stars;
+        this.confidenceScore = confidenceScore;
         this.searchURL = null;
     }
 
@@ -66,12 +66,12 @@ public class ComplexDetailsEvidenceType {
     }
 
     @XmlElement
-    public Integer getStars() {
-        return stars;
+    public Integer getConfidenceScore() {
+        return confidenceScore;
     }
 
-    public void setStars(Integer stars) {
-        this.stars = stars;
+    public void setConfidenceScore(Integer confidenceScore) {
+        this.confidenceScore = confidenceScore;
     }
 
 }

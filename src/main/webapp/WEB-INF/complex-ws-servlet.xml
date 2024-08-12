@@ -67,15 +67,15 @@
     </bean>
 
     <!-- Intact core basic datasource -->
-    <bean id="jamiCoreDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
-        <property name="jndiName" value="java:comp/env/${db.jndi}"/>
-    </bean>
-<!--    <bean id="jamiCoreDataSource" class="org.apache.commons.dbcp.BasicDataSource">-->
-<!--        <property name="driverClassName" value="${db.driver}"/>-->
-<!--        <property name="url" value="${db.url}"/>-->
-<!--        <property name="username" value="${db.user}"/>-->
-<!--        <property name="password" value="${db.password}"/>-->
+<!--    <bean id="jamiCoreDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">-->
+<!--        <property name="jndiName" value="java:comp/env/${db.jndi}"/>-->
 <!--    </bean>-->
+    <bean id="jamiCoreDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${db.driver}"/>
+        <property name="url" value="${db.url}"/>
+        <property name="username" value="${db.user}"/>
+        <property name="password" value="${db.password}"/>
+    </bean>
 
     <!-- INTACT more specific beans -->
     <bean id="jamiUserContext" class="uk.ac.ebi.intact.jami.context.UserContext" scope="prototype">

@@ -149,7 +149,7 @@ public class IntactComplexUtils {
                     ComplexDetailsEvidenceType complexDetailsEvidenceType = new ComplexDetailsEvidenceType(
                             evidenceTypeCode.getEcoCode(),
                             evidenceTypeCode.getDisplayLabel(),
-                            evidenceTypeCode.getStars());
+                            evidenceTypeCode.getConfidenceScore());
                     String searchUrl = getSearchUrl(ecoCodeXref);
                     if (searchUrl != null) {
                         complexDetailsEvidenceType.setSearchURL(searchUrl);

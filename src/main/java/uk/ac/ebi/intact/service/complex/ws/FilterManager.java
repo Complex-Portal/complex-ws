@@ -23,7 +23,7 @@ public class FilterManager {
     private static final String BIO_ROLE_FIELD = "pbiorole_f";
     private static final String PREDICTED_FIELD = "predicted_complex_f";
     private static final String EVIDENCE_TYPE_FIELD = "evidence_type_f";
-    private static final String STARS_FIELD = "stars_f";
+    private static final String CONFIDENCE_SCORE_FIELD = "confidence_score_f";
 
     private static final String SPECIES_TAG = "SPECIES";
     private static final String COMPONENT_TYPE_TAG = "COMP_TYPE";
@@ -67,7 +67,7 @@ public class FilterManager {
         for (String field: facetFields.keySet()) {
             if (facetFields.get(field) != null) {
                 if (EVIDENCE_TYPE_FIELD.equals(field)) {
-                    facets.put(STARS_FIELD, mapEvidenceTypeFacetResults(facetFields.get(field)));
+                    facets.put(CONFIDENCE_SCORE_FIELD, mapEvidenceTypeFacetResults(facetFields.get(field)));
                 } else {
                     List<ComplexFacetResults> list = new ArrayList<>();
                     for (FacetField.Count count : facetFields.get(field)) {
@@ -81,8 +81,8 @@ public class FilterManager {
     }
 
     private static String buildFilterParam(String filterName, String[] filterValues) {
-        if (STARS_FIELD.equals(filterName)) {
-            return mapStarFilterToEvidenceTypeFilter(filterValues);
+        if (CONFIDENCE_SCORE_FIELD.equals(filterName)) {
+            return mapConfidenceScoreFilterToEvidenceTypeFilter(filterValues);
         }
         String facetTag = getFacetTag(filterName);
         String facetTagPrefix = "";
@@ -93,7 +93,7 @@ public class FilterManager {
     }
 
     private static String buildFacetParam(String facetName) {
-        if (STARS_FIELD.equals(facetName)) {
+        if (CONFIDENCE_SCORE_FIELD.equals(facetName)) {
             return buildFacetParam(EVIDENCE_TYPE_FIELD);
         }
         String facetTag = getFacetTag(facetName);
@@ -104,11 +104,11 @@ public class FilterManager {
         return facetTagPrefix + facetName;
     }
 
-    private static String mapStarFilterToEvidenceTypeFilter(String[] filterValues) {
+    private static String mapConfidenceScoreFilterToEvidenceTypeFilter(String[] filterValues) {
         Set<String> ecoCodes = new HashSet<>();
         for (String filterValue : filterValues) {
             try {
-                ecoCodes.addAll(EvidenceTypeCode.getEcoCodesForStar(Integer.valueOf(filterValue)));
+                ecoCodes.addAll(EvidenceTypeCode.getEcoCodesForConfidenceScore(Integer.valueOf(filterValue)));
             } catch (NumberFormatException e) {
                 // nothing to do here
             }
@@ -134,19 +134,19 @@ public class FilterManager {
     }
 
     private static List<ComplexFacetResults> mapEvidenceTypeFacetResults(List<FacetField.Count> facetCounts) {
-        Map<Integer, Long> facetCountByStars = new HashMap<>();
+        Map<Integer, Long> facetCountByConfidenceScore = new HashMap<>();
         for (FacetField.Count count : facetCounts) {
             String facetValueName = count.getName();
             long facetValueCount = count.getCount();
 
-            Integer stars = EvidenceTypeCode.getStars(facetValueName);
-            if (stars != null) {
-                Long accumulatedCount = facetCountByStars.getOrDefault(stars, 0L);
-                facetCountByStars.put(stars, accumulatedCount + facetValueCount);
+            Integer confidenceScore = EvidenceTypeCode.getConfidenceScore(facetValueName);
+            if (confidenceScore != null) {
+                Long accumulatedCount = facetCountByConfidenceScore.getOrDefault(confidenceScore, 0L);
+                facetCountByConfidenceScore.put(confidenceScore, accumulatedCount + facetValueCount);
             }
         }
 
-        return facetCountByStars.entrySet()
+        return facetCountByConfidenceScore.entrySet()
                 .stream()
                 .map(e -> new ComplexFacetResults(e.getKey().toString(), e.getValue()))
                 .sorted(Comparator.comparing(ComplexFacetResults::getName).reversed())

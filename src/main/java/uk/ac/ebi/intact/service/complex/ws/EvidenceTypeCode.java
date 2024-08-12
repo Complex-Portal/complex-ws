@@ -15,47 +15,39 @@ public enum EvidenceTypeCode {
             "ECO:0000353",
             "physical interaction evidence",
             5),
-    ECO_0000314(
-            "ECO:0000314",
-            "direct assay evidence used in manual assertion",
-            5),
-    ECO_0000269(
-            "ECO:0000269",
-            "experimental evidence used in manual assertion",
-            5),
     ECO_0005543(
             "ECO:0005543",
-            "mixed species evidence inference",
+            "experimental evidence from mixed species ",
             5),
     ECO_0005610(
             "ECO:0005610",
-            "homology inference",
+            "inferred by homology",
             4),
     ECO_0005544(
             "ECO:0005544",
-            "orthology inference",
+            "inferred by orthology ",
             4),
     ECO_0005546(
             "ECO:0005546",
-            "paralogy inference",
+            "inferred by paralogy ",
             4),
     ECO_0005547(
             "ECO:0005547",
-            "curator inference",
+            "inferred by curator",
             3),
     ECO_0007653(
             "ECO:0007653",
-            "automatically integrated combinatorial prediction",
+            "machine-learning predicted complex based on combinatorial evidence",
             2),
     ECO_0008004(
             "ECO:0008004",
-            "machine learning prediction",
+            "machine-learning predicted complex",
             1);
 
 
     private final String ecoCode;
     private final String displayLabel;
-    private final Integer stars;
+    private final Integer confidenceScore;
 
     public static EvidenceTypeCode getEvidenceTypeCode(String ecoCode) {
         return Arrays.stream(EvidenceTypeCode.values())
@@ -64,17 +56,17 @@ public enum EvidenceTypeCode {
                 .orElse(null);
     }
 
-    public static Integer getStars(String ecoCode) {
+    public static Integer getConfidenceScore(String ecoCode) {
         return Arrays.stream(EvidenceTypeCode.values())
                 .filter(evidenceTypeCode -> evidenceTypeCode.ecoCode.equals(ecoCode))
-                .map(evidenceTypeCode -> evidenceTypeCode.stars)
+                .map(evidenceTypeCode -> evidenceTypeCode.confidenceScore)
                 .findFirst()
                 .orElse(null);
     }
 
-    public static List<String> getEcoCodesForStar(Integer stars) {
+    public static List<String> getEcoCodesForConfidenceScore(Integer confidenceScore) {
         return Arrays.stream(EvidenceTypeCode.values())
-                .filter(evidenceTypeCode -> evidenceTypeCode.stars.equals(stars))
+                .filter(evidenceTypeCode -> evidenceTypeCode.confidenceScore.equals(confidenceScore))
                 .map(evidenceTypeCode -> evidenceTypeCode.ecoCode)
                 .collect(Collectors.toList());
     }
