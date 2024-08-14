@@ -5,7 +5,7 @@ package uk.ac.ebi.intact.service.complex.ws;
  */
 public enum ComplexExportFormat {
 
-    JSON("json"), XML25("xml25"), XML30("xml30");
+    JSON("json"), XML25("xml25"), XML30("xml30"), TSV("tsv");
 
     String format;
 
@@ -21,6 +21,7 @@ public enum ComplexExportFormat {
         if (JSON.format.equals(format)) return JSON;
         else if (XML25.format.equals(format)) return XML25;
         else if (XML30.format.equals(format)) return XML30;
+        else if (TSV.format.equals(format)) return TSV;
         else return JSON;
     }
 }

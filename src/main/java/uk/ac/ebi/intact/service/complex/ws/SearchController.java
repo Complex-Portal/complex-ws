@@ -30,6 +30,8 @@ import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import uk.ac.ebi.complex.service.ComplexFinderResult;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
 import uk.ac.ebi.intact.dataexchange.psimi.xml.IntactPsiXml;
+import uk.ac.ebi.intact.export.complex.tab.exception.ComplexExportException;
+import uk.ac.ebi.intact.export.complex.tab.writer.ComplexFlatWriter;
 import uk.ac.ebi.intact.jami.dao.IntactDao;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
@@ -299,6 +301,9 @@ public class SearchController {
                     case XML30:
                         responseEntity = createXml30Response(complexes, writerFactory, exportAsFile);
                         break;
+                    case TSV:
+                        responseEntity = createComplexTabResponse(complexes, exportAsFile);
+                        break;
                     case JSON:
                     default:
                         responseEntity = createJsonResponse(complexes, writerFactory, exportAsFile);
@@ -399,6 +404,23 @@ public class SearchController {
             httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
         }
         return new ResponseEntity<String>(answer.toString(), httpHeaders, HttpStatus.OK);
+    }
+
+    private ResponseEntity<String> createComplexTabResponse(List<IntactComplex> complexes, Boolean exportAsFile) throws IOException, ComplexExportException {
+        StringWriter answer = new StringWriter();
+        ComplexFlatWriter complexFlatWriter = new ComplexFlatWriter(answer);
+        for (IntactComplex complex : complexes) {
+            complexFlatWriter.writeComplex(complex);
+        }
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+        enableCORS(httpHeaders);
+        if (exportAsFile) {
+            httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
+        }
+        return new ResponseEntity<>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
 
     protected void enableCORS(HttpHeaders headers) {

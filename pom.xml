@@ -77,6 +77,12 @@
             <version>${dataexchange.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>uk.ac.ebi.intact.dataexchange</groupId>
+            <artifactId>complex-tab-export</artifactId>
+            <version>${dataexchange.version}</version>
+        </dependency>
+
         <!-- JAMI -->
         <dependency>
             <groupId>uk.ac.ebi.intact.jami</groupId>
