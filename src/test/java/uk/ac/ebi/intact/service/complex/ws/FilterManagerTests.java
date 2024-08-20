@@ -9,7 +9,7 @@ import uk.ac.ebi.intact.service.complex.ws.model.ComplexFacetResults;
 import java.util.List;
 import java.util.Map;
 
-public class FilterManagerTest {
+public class FilterManagerTests {
 
     @Test
     public void testSpeciesFilter() {
@@ -62,8 +62,8 @@ public class FilterManagerTest {
     }
 
     @Test
-    public void testStarsFilter() {
-        String filtersInput = "stars_f:(\"3\"OR\"4\")";
+    public void testConfidenceScoreFilter() {
+        String filtersInput = "confidence_score_f:(\"3\"OR\"4\")";
         String[] expectedFilters = new String[]{
                 "{!tag=EVIDENCE_TYPE}evidence_type_f:(\"ECO:0005610\"OR\"ECO:0005544\"OR\"ECO:0005546\"OR\"ECO:0005547\")"
         };
@@ -133,8 +133,8 @@ public class FilterManagerTest {
     }
 
     @Test
-    public void testStarsFacet() {
-        String facetsInput = "stars_f";
+    public void testConfidenceScoreFacet() {
+        String facetsInput = "confidence_score_f";
         String[] expectedFacets = new String[]{
                 "{!ex=EVIDENCE_TYPE}evidence_type_f"
         };
@@ -144,7 +144,7 @@ public class FilterManagerTest {
 
     @Test
     public void testMultipleFacets() {
-        String facetsInput = "species_f,ptype_f,stars_f";
+        String facetsInput = "species_f,ptype_f,confidence_score_f";
         String[] expectedFacets = new String[]{
                 "{!ex=SPECIES}species_f",
                 "{!ex=COMP_TYPE}ptype_f",
@@ -219,15 +219,15 @@ public class FilterManagerTest {
     }
 
     @Test
-    public void testStarsFacetResponse() {
+    public void testConfidenceScoreFacetResponse() {
         Map<String, List<FacetField.Count>> facetFields = Map.of(
                 "evidence_type_f",
                 ImmutableList.of(
                         new FacetField.Count(null, "ECO:0000353", 5L),
-                        new FacetField.Count(null, "ECO:0000314", 2L),
+                        new FacetField.Count(null, "ECO:0005543", 2L),
                         new FacetField.Count(null, "ECO:0005547", 10L)));
         Map<String, List<ComplexFacetResults>> expectedFacets = Map.of(
-                "stars_f",
+                "confidence_score_f",
                 ImmutableList.of(
                         new ComplexFacetResults("5", 7L),
                         new ComplexFacetResults("3", 10L)));
@@ -249,7 +249,7 @@ public class FilterManagerTest {
                 "evidence_type_f",
                 ImmutableList.of(
                         new FacetField.Count(null, "ECO:0000353", 5L),
-                        new FacetField.Count(null, "ECO:0000314", 2L),
+                        new FacetField.Count(null, "ECO:0005543", 2L),
                         new FacetField.Count(null, "ECO:0005547", 10L)));
         Map<String, List<ComplexFacetResults>> expectedFacets = Map.of(
                 "species_f",
@@ -260,7 +260,7 @@ public class FilterManagerTest {
                 ImmutableList.of(
                         new ComplexFacetResults("protein", 5L),
                         new ComplexFacetResults("small molecule", 2L)),
-                "stars_f",
+                "confidence_score_f",
                 ImmutableList.of(
                         new ComplexFacetResults("5", 7L),
                         new ComplexFacetResults("3", 10L)));
