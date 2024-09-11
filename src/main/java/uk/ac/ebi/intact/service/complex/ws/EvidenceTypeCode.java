@@ -66,7 +66,7 @@ public enum EvidenceTypeCode {
 
     public static List<String> getEcoCodesForConfidenceScore(Integer confidenceScore) {
         return Arrays.stream(EvidenceTypeCode.values())
-                .filter(evidenceTypeCode -> evidenceTypeCode.confidenceScore.equals(confidenceScore))
+                .filter(evidenceTypeCode -> evidenceTypeCode.confidenceScore >= confidenceScore)
                 .map(evidenceTypeCode -> evidenceTypeCode.ecoCode)
                 .collect(Collectors.toList());
     }
