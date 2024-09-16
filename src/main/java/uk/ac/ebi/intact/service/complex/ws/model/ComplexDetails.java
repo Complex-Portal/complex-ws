@@ -40,7 +40,8 @@ public class ComplexDetails {
     private Collection<String> agonists;
     private Collection<String> antagonists;
     private Collection<String> comments;
-
+    private boolean predictedComplex;
+    private ComplexDetailsEvidenceType evidenceType;
 
     /*************************/
     /*      Constructor      */
@@ -204,5 +205,21 @@ public class ComplexDetails {
 
     public void setComments(Collection<String> comments) {
         this.comments = comments;
+    }
+
+    public ComplexDetailsEvidenceType getEvidenceType() {
+        return evidenceType;
+    }
+
+    public void setEvidenceType(ComplexDetailsEvidenceType evidenceType) {
+        this.evidenceType = evidenceType;
+    }
+
+    public boolean isPredictedComplex() {
+        return predictedComplex;
+    }
+
+    public void setPredictedComplex(boolean predictedComplex) {
+        this.predictedComplex = predictedComplex;
     }
 }

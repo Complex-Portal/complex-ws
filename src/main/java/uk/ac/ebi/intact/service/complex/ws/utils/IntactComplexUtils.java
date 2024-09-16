@@ -9,8 +9,10 @@ import uk.ac.ebi.intact.jami.model.extension.IntactInteractor;
 import uk.ac.ebi.intact.jami.model.extension.IntactModelledParticipant;
 import uk.ac.ebi.intact.jami.model.extension.IntactStoichiometry;
 import uk.ac.ebi.intact.jami.model.extension.InteractorXref;
+import uk.ac.ebi.intact.service.complex.ws.EvidenceTypeCode;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsCrossReferences;
+import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsEvidenceType;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsFeatures;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsParticipants;
 
@@ -111,20 +113,53 @@ public class IntactComplexUtils {
             cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
         }
         cross.setIdentifier(xref.getId());
-        Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+        String searchUrl = getSearchUrl(xref);
         if (searchUrl != null) {
-            if (cross.getIdentifier().startsWith("PR:")) {
-                String modifiedIdentifier = cross.getIdentifier().replace("PR:", "");
-                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier));
-            } else {
-                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", cross.getIdentifier()));
-            }
+            cross.setSearchURL(searchUrl);
         }
         if (xref instanceof InteractorXref) {
             InteractorXref interactorXref = (InteractorXref) xref;
             if (interactorXref.getSecondaryId() != null) cross.setDescription(interactorXref.getSecondaryId());
         }
         return cross;
+    }
+
+    private static String getSearchUrl(Xref xref) {
+        Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+        if (searchUrl != null) {
+            if (xref.getId().startsWith("PR:")) {
+                String modifiedIdentifier = xref.getId().replace("PR:", "");
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier);
+            } else {
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", xref.getId());
+            }
+        }
+        return null;
+    }
+
+    public static ComplexDetailsEvidenceType createEvidenceType(CvTerm evidenceType) {
+        if (evidenceType != null) {
+            Optional<Xref> ecoCodeXrefOp = evidenceType.getIdentifiers().stream()
+                    .filter(id -> ModelledInteraction.ECO_MI.equals(id.getDatabase().getMIIdentifier()))
+                    .findFirst();
+            if (ecoCodeXrefOp.isPresent()) {
+                Xref ecoCodeXref = ecoCodeXrefOp.get();
+                EvidenceTypeCode evidenceTypeCode = EvidenceTypeCode.getEvidenceTypeCode(ecoCodeXref.getId());
+                if (evidenceTypeCode != null) {
+                    ComplexDetailsEvidenceType complexDetailsEvidenceType = new ComplexDetailsEvidenceType(
+                            evidenceTypeCode.getEcoCode(),
+                            evidenceTypeCode.getDisplayLabel(),
+                            evidenceTypeCode.getConfidenceScore());
+                    String searchUrl = getSearchUrl(ecoCodeXref);
+                    if (searchUrl != null) {
+                        complexDetailsEvidenceType.setSearchURL(searchUrl);
+                    }
+                    return complexDetailsEvidenceType;
+                }
+
+            }
+        }
+        return null;
     }
 
     // This method fills the participants table for the view
@@ -166,15 +201,22 @@ public class IntactComplexUtils {
             for (ModelledParticipant participant : participantList) {
                 if (((IntactInteractor) aux.getInteractor()).getAc().equals(((IntactInteractor) participant.getInteractor()).getAc())) {
                     //Same
-                    minStochiometry += participant.getStoichiometry().getMinValue();
-                    maxStochiometry += participant.getStoichiometry().getMaxValue();
+                    if (participant.getStoichiometry() != null) {
+                        minStochiometry += participant.getStoichiometry().getMinValue();
+                        maxStochiometry += participant.getStoichiometry().getMaxValue();
+                    }
                 } else {
                     //Different
                     aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
                     merged.add(aux);
                     aux = participant;
-                    minStochiometry = aux.getStoichiometry().getMinValue();
-                    maxStochiometry = aux.getStoichiometry().getMaxValue();
+                    if (aux.getStoichiometry() != null) {
+                        minStochiometry = aux.getStoichiometry().getMinValue();
+                        maxStochiometry = aux.getStoichiometry().getMaxValue();
+                    } else {
+                        minStochiometry = 0;
+                        maxStochiometry = 0;
+                    }
                 }
             }
             aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
@@ -437,8 +479,10 @@ public class IntactComplexUtils {
     }
 
     public static String getParticipantStoichiometry(ModelledParticipant participant) {
-        if (participant.getStoichiometry().getMinValue() != 0 || participant.getStoichiometry().getMaxValue() != 0) {
-            return participant.getStoichiometry().toString();
+        if (participant.getStoichiometry() != null) {
+            if (participant.getStoichiometry().getMinValue() != 0 || participant.getStoichiometry().getMaxValue() != 0) {
+                return participant.getStoichiometry().toString();
+            }
         }
         return null;
     }

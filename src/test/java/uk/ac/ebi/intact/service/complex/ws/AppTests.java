@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW, value = "jamiTransactionManager")
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-@ContextConfiguration(locations = {"file:src/main/webapp/WEB-INF/complex-ws-servlet.xml"})
+@ContextConfiguration(locations = {"file:src/test/resources/WEB-INF/complex-ws-test-servlet.xml"})
 public class AppTests {
     private MockMvc mockMvc;
 
