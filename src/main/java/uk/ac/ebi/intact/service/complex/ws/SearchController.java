@@ -1,9 +1,8 @@
 package uk.ac.ebi.intact.service.complex.ws;
 
+import lombok.extern.log4j.Log4j;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Log4j
 @Controller
 public class SearchController {
 
@@ -91,8 +91,6 @@ public class SearchController {
         this.intactDao = intactDao;
         this.complexManager = complexManager;
     }
-
-    private static final Log log = LogFactory.getLog(SearchController.class);
 
     /****************************/
     /*      Public methods      */
@@ -158,7 +156,7 @@ public class SearchController {
      - Only listen request via GET never via POST.
      - Does not change the query.
      */
-    @RequestMapping(value = "/search/{query}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/search/{query:.+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
 	public ResponseEntity<String> search(@PathVariable String query,
                                     @RequestParam (required = false) String first,

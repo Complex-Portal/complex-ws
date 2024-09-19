@@ -1,5 +1,6 @@
 package uk.ac.ebi.intact.service.complex.ws;
 
+import lombok.extern.log4j.Log4j;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,10 +19,9 @@ import uk.ac.ebi.intact.service.complex.ws.utils.IntactComplexUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Log4j
 @Component
 public class ComplexManager {
 

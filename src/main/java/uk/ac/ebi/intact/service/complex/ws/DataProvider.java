@@ -1,7 +1,6 @@
 package uk.ac.ebi.intact.service.complex.ws;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.log4j.Log4j;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexResultIterator;
@@ -16,6 +15,7 @@ import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResult;
  * @version $Id$
  * @since 08/11/13
  */
+@Log4j
 public class DataProvider {
     /********************************/
     /*      Private attributes      */
@@ -23,7 +23,6 @@ public class DataProvider {
     @Autowired
     private ComplexSolrSearcher searcher ;
     int chunkSize; // 500 is a good number
-    private static final Log log = LogFactory.getLog(DataProvider.class);
 
     /*************************/
     /*      Constructor      */
