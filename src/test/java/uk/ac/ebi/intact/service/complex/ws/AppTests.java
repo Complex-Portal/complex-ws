@@ -29,7 +29,7 @@ public class AppTests {
     protected WebApplicationContext wac;
 
     // You have to update this value when you indexed new complexes
-    protected int numberOfComplexes = 4775;
+    protected int numberOfComplexes = 19871;
 
     @Before
     public void setup() {

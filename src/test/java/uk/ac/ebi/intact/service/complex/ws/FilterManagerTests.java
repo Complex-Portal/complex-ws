@@ -65,7 +65,7 @@ public class FilterManagerTests {
     public void testConfidenceScoreFilter() {
         String filtersInput = "confidence_score_f:(\"3\"OR\"4\")";
         String[] expectedFilters = new String[]{
-                "{!tag=EVIDENCE_TYPE}evidence_type_f:(\"ECO:0005610\"OR\"ECO:0005544\"OR\"ECO:0005546\"OR\"ECO:0005547\")"
+                "{!tag=EVIDENCE_TYPE}evidence_type_f:(\"ECO:0000353\"OR\"ECO:0005543\"OR\"ECO:0005610\"OR\"ECO:0005544\"OR\"ECO:0005546\"OR\"ECO:0005547\")"
         };
         String[] filters = FilterManager.mapFiltersParam(filtersInput);
         Assert.assertArrayEquals(expectedFilters, filters);
