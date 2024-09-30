@@ -7,9 +7,12 @@ import psidev.psi.mi.jami.utils.RangeUtils;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.jami.model.extension.IntactInteractor;
 import uk.ac.ebi.intact.jami.model.extension.IntactModelledParticipant;
+import uk.ac.ebi.intact.jami.model.extension.IntactStoichiometry;
 import uk.ac.ebi.intact.jami.model.extension.InteractorXref;
+import uk.ac.ebi.intact.service.complex.ws.EvidenceTypeCode;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsCrossReferences;
+import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsEvidenceType;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsFeatures;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsParticipants;
 
@@ -110,20 +113,53 @@ public class IntactComplexUtils {
             cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
         }
         cross.setIdentifier(xref.getId());
-        Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+        String searchUrl = getSearchUrl(xref);
         if (searchUrl != null) {
-            if (cross.getIdentifier().startsWith("PR:")) {
-                String modifiedIdentifier = cross.getIdentifier().replace("PR:", "");
-                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier));
-            } else {
-                cross.setSearchURL(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", cross.getIdentifier()));
-            }
+            cross.setSearchURL(searchUrl);
         }
         if (xref instanceof InteractorXref) {
             InteractorXref interactorXref = (InteractorXref) xref;
             if (interactorXref.getSecondaryId() != null) cross.setDescription(interactorXref.getSecondaryId());
         }
         return cross;
+    }
+
+    private static String getSearchUrl(Xref xref) {
+        Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+        if (searchUrl != null) {
+            if (xref.getId().startsWith("PR:")) {
+                String modifiedIdentifier = xref.getId().replace("PR:", "");
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", modifiedIdentifier);
+            } else {
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", xref.getId());
+            }
+        }
+        return null;
+    }
+
+    public static ComplexDetailsEvidenceType createEvidenceType(CvTerm evidenceType) {
+        if (evidenceType != null) {
+            Optional<Xref> ecoCodeXrefOp = evidenceType.getIdentifiers().stream()
+                    .filter(id -> ModelledInteraction.ECO_MI.equals(id.getDatabase().getMIIdentifier()))
+                    .findFirst();
+            if (ecoCodeXrefOp.isPresent()) {
+                Xref ecoCodeXref = ecoCodeXrefOp.get();
+                EvidenceTypeCode evidenceTypeCode = EvidenceTypeCode.getEvidenceTypeCode(ecoCodeXref.getId());
+                if (evidenceTypeCode != null) {
+                    ComplexDetailsEvidenceType complexDetailsEvidenceType = new ComplexDetailsEvidenceType(
+                            evidenceTypeCode.getEcoCode(),
+                            evidenceTypeCode.getDisplayLabel(),
+                            evidenceTypeCode.getConfidenceScore());
+                    String searchUrl = getSearchUrl(ecoCodeXref);
+                    if (searchUrl != null) {
+                        complexDetailsEvidenceType.setSearchURL(searchUrl);
+                    }
+                    return complexDetailsEvidenceType;
+                }
+
+            }
+        }
+        return null;
     }
 
     // This method fills the participants table for the view
@@ -139,40 +175,11 @@ public class IntactComplexUtils {
                 setInteractorType(part, interactor);
                 part.setDescription(interactor.getFullName());
                 part.setInteractorAC(((IntactModelledParticipant) participant).getAc());
-                if (interactor instanceof Protein) {
-                    Protein protein = (Protein) interactor;
-                    part.setName(protein.getGeneName() != null ? protein.getGeneName(): protein.getPreferredName());
-                    part.setIdentifier(protein.getPreferredIdentifier().getId());
-                } else if (interactor instanceof BioactiveEntity) {
-                    BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
-                    part.setName(bioactiveEntity.getShortName());
-                    part.setIdentifier(bioactiveEntity.getChebi());
-                } else if (interactor instanceof Complex) {
-                    Complex complexParticipant = (Complex) interactor;
-                    part.setName(complexParticipant.getRecommendedName());
-                    part.setIdentifier(complexParticipant.getComplexAc());
-                }
-                else{
-                    for (Xref x : interactor.getIdentifiers()) {
-                        if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
-                            part.setName(interactor.getShortName());
-                            part.setIdentifier(x.getId());
-                        }
-                    }
-                    if (part.getName() == null && part.getIdentifier() == null) {
-                        part.setName(interactor.getShortName());
-                        part.setIdentifier(interactor.getPreferredIdentifier().getId());
-                    }
-                }
-
-                Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
-                if (searchUrl != null) {
-                    part.setIdentifierLink(searchUrl.getValue().replaceAll("\\$*\\{ac\\}", part.getIdentifier()));
-                }
-                if (participant.getStoichiometry().getMinValue() == 0 && participant.getStoichiometry().getMaxValue() == 0)
-                    part.setStochiometry(null);
-                else
-                    part.setStochiometry(participant.getStoichiometry().toString());
+                String identifier = getParticipantIdentifier(participant);
+                part.setName(getParticipantName(participant));
+                part.setIdentifier(identifier);
+                part.setIdentifierLink(getParticipantIdentifierLink(participant, identifier));
+                part.setStochiometry(getParticipantStoichiometry(participant));
                 if (participant.getBiologicalRole() != null) {
                     setBiologicalRole(part, participant);
                 }
@@ -182,32 +189,37 @@ public class IntactComplexUtils {
         }
     }
 
-    private static Collection<ModelledParticipant> mergeParticipants(Collection<ModelledParticipant> participants) {
+    public static Collection<ModelledParticipant> mergeParticipants(Collection<ModelledParticipant> participants) {
         if (participants.size() > 1) {
-            Comparator<ModelledParticipant> comparator = new Comparator<ModelledParticipant>() {
-                @Override
-                public int compare(ModelledParticipant o1, ModelledParticipant o2) {
-                    return (((IntactInteractor) o1.getInteractor()).getAc().compareTo(((IntactInteractor) o2.getInteractor()).getAc()));
-                }
-            };
+            Comparator<ModelledParticipant> comparator = Comparator.comparing(o -> ((IntactInteractor) o.getInteractor()).getAc());
             List<ModelledParticipant> participantList = (List<ModelledParticipant>) participants;
-            Collections.sort(participantList, comparator);
-            Collection<ModelledParticipant> merged = new ArrayList<ModelledParticipant>();
+            participantList.sort(comparator);
+            Collection<ModelledParticipant> merged = new ArrayList<>();
             ModelledParticipant aux = participantList.get(0);
-            int stochiometry = 0;
+            int minStochiometry = 0;
+            int maxStochiometry = 0;
             for (ModelledParticipant participant : participantList) {
                 if (((IntactInteractor) aux.getInteractor()).getAc().equals(((IntactInteractor) participant.getInteractor()).getAc())) {
                     //Same
-                    stochiometry += participant.getStoichiometry().getMinValue();
+                    if (participant.getStoichiometry() != null) {
+                        minStochiometry += participant.getStoichiometry().getMinValue();
+                        maxStochiometry += participant.getStoichiometry().getMaxValue();
+                    }
                 } else {
                     //Different
-                    aux.setStoichiometry(stochiometry);
+                    aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
                     merged.add(aux);
                     aux = participant;
-                    stochiometry = aux.getStoichiometry().getMinValue();
+                    if (aux.getStoichiometry() != null) {
+                        minStochiometry = aux.getStoichiometry().getMinValue();
+                        maxStochiometry = aux.getStoichiometry().getMaxValue();
+                    } else {
+                        minStochiometry = 0;
+                        maxStochiometry = 0;
+                    }
                 }
             }
-            aux.setStoichiometry(stochiometry);
+            aux.setStoichiometry(new IntactStoichiometry(minStochiometry, maxStochiometry));
             merged.add(aux);
             return merged;
         } else {
@@ -407,4 +419,71 @@ public class IntactComplexUtils {
         return null;
     }
 
+    public static String getParticipantName(ModelledParticipant participant) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null) {
+            if (interactor instanceof Protein) {
+                Protein protein = (Protein) interactor;
+                return protein.getGeneName() != null ? protein.getGeneName(): protein.getPreferredName();
+            } else if (interactor instanceof BioactiveEntity) {
+                BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
+                return bioactiveEntity.getShortName();
+            } else if (interactor instanceof Complex) {
+                Complex complexParticipant = (Complex) interactor;
+                return complexParticipant.getRecommendedName();
+            } else {
+                for (Xref x : interactor.getIdentifiers()) {
+                    if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
+                        return interactor.getShortName();
+                    }
+                }
+            }
+            return interactor.getShortName();
+        }
+        return null;
+    }
+
+    public static String getParticipantIdentifier(ModelledParticipant participant) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null) {
+            if (interactor instanceof Protein) {
+                Protein protein = (Protein) interactor;
+                return protein.getPreferredIdentifier().getId();
+            } else if (interactor instanceof BioactiveEntity) {
+                BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
+                return bioactiveEntity.getChebi();
+            } else if (interactor instanceof Complex) {
+                Complex complexParticipant = (Complex) interactor;
+                return complexParticipant.getComplexAc();
+            } else {
+                for (Xref x : interactor.getIdentifiers()) {
+                    if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
+                        return x.getId();
+                    }
+                }
+            }
+            return interactor.getPreferredIdentifier().getId();
+        }
+        return null;
+    }
+
+    public static String getParticipantIdentifierLink(ModelledParticipant participant, String identifier) {
+        Interactor interactor = participant.getInteractor();
+        if (interactor != null && identifier != null) {
+            Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+            if (searchUrl != null) {
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", identifier);
+            }
+        }
+        return null;
+    }
+
+    public static String getParticipantStoichiometry(ModelledParticipant participant) {
+        if (participant.getStoichiometry() != null) {
+            if (participant.getStoichiometry().getMinValue() != 0 || participant.getStoichiometry().getMaxValue() != 0) {
+                return participant.getStoichiometry().toString();
+            }
+        }
+        return null;
+    }
 }

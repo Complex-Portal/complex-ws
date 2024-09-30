@@ -1,7 +1,6 @@
 package uk.ac.ebi.intact.service.complex.ws;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.log4j.Log4j;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexResultIterator;
@@ -16,6 +15,7 @@ import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResult;
  * @version $Id$
  * @since 08/11/13
  */
+@Log4j
 public class DataProvider {
     /********************************/
     /*      Private attributes      */
@@ -23,7 +23,6 @@ public class DataProvider {
     @Autowired
     private ComplexSolrSearcher searcher ;
     int chunkSize; // 500 is a good number
-    private static final Log log = LogFactory.getLog(DataProvider.class);
 
     /*************************/
     /*      Constructor      */
@@ -43,13 +42,14 @@ public class DataProvider {
     // This method is for abstract the way to retrieve information from Solr.
     // It does not check the parameter because it is called from getData method
     // , where we control all that things
-    protected ComplexResultIterator retrieve(String query, int offset, int size, String filters) throws SolrServerException {
+    protected ComplexResultIterator retrieve(String query, int offset, int size, String filters[]) throws SolrServerException {
         ComplexResultIterator iterator; // Used to stored the query's result
-        iterator = this.searcher.search ( query, // query
-                                         offset, // first result
-                                           size, // end result
-                                       filters ) // filters to use
-        ;
+        iterator = this.searcher.searchWithFilters (
+                query, // query
+                offset, // first result
+                size, // end result
+                filters); // filters to use
+
         // Check if iterator has information and return the right result
         return iterator.hasNext() ? iterator : null;
     }
@@ -57,20 +57,22 @@ public class DataProvider {
     // This method is for abstract the way to retrieve information from Solr.
     // It does not check the parameter because it is called from getData method
     // , where we control all that things. Moreover, it uses the facets
-    protected ComplexResultIterator retrieve(String query, int offset, int size, String filters, String facets) throws SolrServerException {
-        return this.searcher.searchWithFacets( query, // query
-                                                  offset, // first result
-                                                    size, // end result
-                                                 filters, // filters to use
-                                                  facets) // facets fields to use
-        ;
+    protected ComplexResultIterator retrieve(String query, int offset, int size, String[] filters, String[] facets) throws SolrServerException {
+        return this.searcher.searchWithFacets(
+                query, // query
+                offset, // first result
+                size, // end result
+                filters, // filters to use
+                facets, // facets fields to use
+                null, // first facet
+                null); // max facet
     }
 
     /****************************/
     /*      Public methods      */
     /****************************/
     // getData function return the results of the query
-    public ComplexRestResult getData(String query, int first, int number, String filters, String facets) throws SolrServerException {
+    public ComplexRestResult getData(String query, int first, int number, String filters[], String facets[]) throws SolrServerException {
         int i = first;
         boolean in = false; // to know if we went into the loop
         ComplexResultIterator iterator = null; // Gives retrieve method results

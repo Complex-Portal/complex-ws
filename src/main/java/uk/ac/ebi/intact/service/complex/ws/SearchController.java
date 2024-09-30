@@ -1,9 +1,8 @@
 package uk.ac.ebi.intact.service.complex.ws;
 
+import lombok.extern.log4j.Log4j;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +26,15 @@ import psidev.psi.mi.jami.json.MIJsonType;
 import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
+import uk.ac.ebi.complex.service.ComplexFinderResult;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexSearchResults;
 import uk.ac.ebi.intact.dataexchange.psimi.xml.IntactPsiXml;
+import uk.ac.ebi.intact.export.complex.tab.exception.ComplexExportException;
+import uk.ac.ebi.intact.export.complex.tab.writer.ComplexFlatWriter;
 import uk.ac.ebi.intact.jami.dao.IntactDao;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexRestResult;
-import uk.ac.ebi.intact.service.complex.ws.utils.IntactComplexUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -41,7 +42,10 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Log4j
 @Controller
 public class SearchController {
 
@@ -78,14 +82,15 @@ public class SearchController {
     /*      Private attributes      */
     /********************************/
 
-    @Autowired
-    private DataProvider dataProvider;
-
-    @Autowired
-    @Qualifier("intactDao")
     private IntactDao intactDao;
+    private ComplexManager complexManager;
 
-    private static final Log log = LogFactory.getLog(SearchController.class);
+    @Autowired
+    public SearchController(@Qualifier("intactDao") IntactDao intactDao,
+                            ComplexManager complexManager) {
+        this.intactDao = intactDao;
+        this.complexManager = complexManager;
+    }
 
     /****************************/
     /*      Public methods      */
@@ -122,6 +127,12 @@ public class SearchController {
         return "export";
     }
 
+    @RequestMapping(value = "/find/", method = RequestMethod.GET)
+    public String showFindHelp(HttpServletResponse response){
+        enableClacks(response);
+        return "find";
+    }
+
     @RequestMapping(value = "/count/{query}", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
     public String count(@PathVariable String query, ModelMap model, HttpServletResponse response) throws SolrServerException {
         enableClacks(response);
@@ -131,7 +142,7 @@ public class SearchController {
         } catch (URIException e) {
             e.printStackTrace();
         }
-        long total = query(q, null, null, null, null).getTotalNumberOfResults();
+        long total = complexManager.query(q, null, null, null, null).getTotalNumberOfResults();
         model.addAttribute("count", total);
         return "count";
     }
@@ -145,23 +156,44 @@ public class SearchController {
      - Only listen request via GET never via POST.
      - Does not change the query.
      */
-    @RequestMapping(value = "/search/{query}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/search/{query:.+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
 	public ResponseEntity<String> search(@PathVariable String query,
                                     @RequestParam (required = false) String first,
                                     @RequestParam (required = false) String number,
                                     @RequestParam (required = false) String filters,
                                     @RequestParam (required = false) String facets,
                                     HttpServletResponse response) throws SolrServerException, IOException {
-        ComplexRestResult searchResult = query(query, first, number, filters, facets);
         StringWriter writer = new StringWriter();
         ObjectMapper mapper = new ObjectMapper();
+        ComplexRestResult searchResult = complexManager.query(query, first, number, filters, facets);
         mapper.writeValue(writer, searchResult);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(headers);
         return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
 	}
+
+    @RequestMapping(value = "/complex-simplified/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
+    public ResponseEntity<String> retrieveComplexByAcFromSolr(@PathVariable String ac,
+                                                              HttpServletResponse response) throws SolrServerException, IOException {
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            ComplexSearchResults enrichedSearchResult = complexManager.getComplexSearchResultsFromSolrOrDb(ac);
+            mapper.writeValue(writer, enrichedSearchResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+        enableCORS(headers);
+        return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
+    }
 
     /*
      - We can access to that method using:
@@ -172,21 +204,21 @@ public class SearchController {
      - Only listen request via GET never via POST.
      - Query the information in our database about the ac of the complex.
      */
-    @RequestMapping(value = "/details/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/details/{ac}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
     public ResponseEntity<String> retrieveComplex(@PathVariable String ac,
                                                   HttpServletResponse response) throws Exception {
 
         IntactComplex complex = intactDao.getComplexDao().getByAc(ac);
 
-        ComplexDetails details = createComplexDetails(complex);
+        ComplexDetails details = complexManager.createComplexDetails(complex);
 
         StringWriter writer = new StringWriter();
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(writer, details);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
 
         enableCORS(headers);
@@ -200,56 +232,26 @@ public class SearchController {
     * Returns answer in json format
     *
     * */
-    @RequestMapping(value = "/complex/{complexAc}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/complex/{complexAc}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
     public ResponseEntity<String> retrieveComplexByAc(@PathVariable String complexAc,
                                                       HttpServletResponse response) throws Exception {
 
         IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(complexAc);
 
-        ComplexDetails details = createComplexDetails(complex);
+        ComplexDetails details = complexManager.createComplexDetails(complex);
 
         StringWriter writer = new StringWriter();
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(writer, details);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
 
         enableCORS(headers);
 
         return new ResponseEntity<String>(writer.toString(), headers, HttpStatus.OK);
-    }
-
-    private ComplexDetails createComplexDetails(IntactComplex complex) throws Exception {
-
-        ComplexDetails details = new ComplexDetails();
-
-        if (complex != null) {
-            details.setAc(complex.getAc());
-            details.setComplexAc(complex.getComplexAc());
-            details.setFunctions(IntactComplexUtils.getFunctions(complex));
-            details.setProperties(IntactComplexUtils.getProperties(complex));
-            details.setDiseases(IntactComplexUtils.getDiseases(complex));
-            details.setLigands(IntactComplexUtils.getLigands(complex));
-            details.setComplexAssemblies(IntactComplexUtils.getComplexAssemblies(complex));
-            details.setName(IntactComplexUtils.getComplexName(complex));
-            details.setSynonyms(IntactComplexUtils.getComplexSynonyms(complex));
-            details.setSystematicName(IntactComplexUtils.getSystematicName(complex));
-            details.setSpecies(IntactComplexUtils.getSpeciesName(complex) + "; " + IntactComplexUtils.getSpeciesTaxId(complex));
-            details.setInstitution(complex.getSource().getShortName());
-            details.setAgonists(IntactComplexUtils.getAgonists(complex));
-            details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
-            details.setComments(IntactComplexUtils.getComments(complex));
-
-            IntactComplexUtils.setParticipants(complex, details);
-            IntactComplexUtils.setCrossReferences(complex, details);
-        } else {
-            throw new Exception();
-        }
-
-        return details;
     }
 
     @RequestMapping(value = "/export/{query}", method = RequestMethod.GET)
@@ -276,7 +278,7 @@ public class SearchController {
                 complexes.add(complex);
         }
         else {
-            ComplexRestResult searchResult = query(query, null, null, filters, null);
+            ComplexRestResult searchResult = complexManager.query(query, null, null, filters, null);
             complexes = new ArrayList<IntactComplex>(searchResult.getElements().size());
             for (ComplexSearchResults result : searchResult.getElements()) {
                 IntactComplex complex = intactDao.getComplexDao().getByAc(result.getComplexAC());
@@ -297,6 +299,9 @@ public class SearchController {
                     case XML30:
                         responseEntity = createXml30Response(complexes, writerFactory, exportAsFile);
                         break;
+                    case TSV:
+                        responseEntity = createComplexTabResponse(complexes, exportAsFile);
+                        break;
                     case JSON:
                     default:
                         responseEntity = createJsonResponse(complexes, writerFactory, exportAsFile);
@@ -309,6 +314,31 @@ public class SearchController {
             return responseEntity;
         }
         throw new Exception("Export failed " + query + ". No complexes result");
+    }
+
+    @RequestMapping(value = "/find", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, value = "jamiTransactionManager")
+    public ResponseEntity<String> findComplexMatches(@RequestParam("proteinAcs") List<String> proteinAcs,
+                                                     HttpServletResponse response) throws Exception {
+
+        List<String> parsedProteinAcs = proteinAcs.stream()
+                .flatMap(proteinAc -> Stream.of(proteinAc.split(",")))
+                .map(String::trim)
+                .collect(Collectors.toList());
+
+        ComplexFinderResult<ComplexDetails> complexFinderResult = complexManager.findComplexWithMatchingProteins(parsedProteinAcs);
+
+        StringWriter writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(writer, complexFinderResult);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        headers.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+
+        enableCORS(headers);
+
+        return new ResponseEntity<>(writer.toString(), headers, HttpStatus.OK);
     }
 
     private boolean isQueryASingleId(String query) {
@@ -365,7 +395,7 @@ public class SearchController {
             writer.close();
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(httpHeaders);
         if (exportAsFile) {
@@ -374,35 +404,21 @@ public class SearchController {
         return new ResponseEntity<String>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
 
-    /*******************************/
-    /*      Protected methods      */
-    /*******************************/
-    // This method controls the first and number parameters and retrieve data
-    protected ComplexRestResult query(String query, String first, String number, String filters, String facets) throws SolrServerException {
-        // Get parameters (if we have them)
-        int f, n;
-        // If we have first parameter parse it to integer
-        if ( first != null ) f = Integer.parseInt(first);
-            // else set first parameter to 0
-        else f = 0;
-        // If we have number parameter parse it to integer
-        if ( number != null ) n = Integer.parseInt(number);
-            // else set number parameter to max integer - first (to avoid problems)
-        else n = Integer.MAX_VALUE - f;
-        // Retrieve data using that parameters and return it
-        return this.dataProvider.getData( query, f, n, filters , facets);
-    }
-
-    // This method is to force to query only for a list of fields
-    protected String improveQuery(String query, List<String> fields) {
-        StringBuilder improvedQuery = new StringBuilder();
-        for ( String field : fields ) {
-            improvedQuery.append(field)
-                    .append(":(")
-                    .append(query)
-                    .append(")");
+    private ResponseEntity<String> createComplexTabResponse(List<IntactComplex> complexes, Boolean exportAsFile) throws IOException, ComplexExportException {
+        StringWriter answer = new StringWriter();
+        ComplexFlatWriter complexFlatWriter = new ComplexFlatWriter(answer);
+        for (IntactComplex complex : complexes) {
+            complexFlatWriter.writeComplex(complex);
         }
-        return improvedQuery.toString();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
+        httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
+        enableCORS(httpHeaders);
+        if (exportAsFile) {
+            httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
+        }
+        return new ResponseEntity<>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
 
     protected void enableCORS(HttpHeaders headers) {

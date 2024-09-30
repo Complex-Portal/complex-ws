@@ -20,15 +20,16 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW, value = "jamiTransactionManager")
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-@ContextConfiguration(locations = {"file:src/main/webapp/WEB-INF/complex-ws-servlet.xml"})
+@ContextConfiguration(locations = {"file:src/test/resources/WEB-INF/complex-ws-test-servlet.xml"})
 public class AppTests {
     private MockMvc mockMvc;
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired
     protected WebApplicationContext wac;
-    protected int numberOfComplexes = 3859; //You have to update this value
-                                           //when you indexed new complexes
+
+    // You have to update this value when you indexed new complexes
+    protected int numberOfComplexes = 19871;
 
     @Before
     public void setup() {
@@ -40,12 +41,12 @@ public class AppTests {
         // Without Header -> It must be a Json response
         mockMvc.perform(get("/search/*"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         ;
         // Test Header Json
-        mockMvc.perform(get("/search/*").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/search/*").accept(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
         ;
     }
 
@@ -54,7 +55,7 @@ public class AppTests {
         // Test Parameter Json
         mockMvc.perform(get("/search/*?format=json"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(numberOfComplexes))
         ;
@@ -73,7 +74,7 @@ public class AppTests {
                                                   .append(offset);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(numberOfComplexes - offset))
         ;
@@ -86,7 +87,7 @@ public class AppTests {
                 .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(number))
         ;
@@ -100,7 +101,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(number))
         ;
@@ -112,7 +113,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(number))
         ;
@@ -123,7 +124,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(1))
         ;
@@ -134,7 +135,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(2))
         ;
@@ -145,7 +146,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(1))
         ;
@@ -156,7 +157,7 @@ public class AppTests {
                 .append(offset) .append("&number=") .append(number);
         mockMvc.perform(get(query.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                 // this test is dependent on the number of indexed complexes
                 .andExpect(jsonPath("$.size").value(0))
         ;
@@ -166,6 +167,6 @@ public class AppTests {
     public void testDetails() throws Exception {
         mockMvc.perform(get("/details/EBI-1163476?format=json"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
     }
 }
