@@ -37,6 +37,7 @@ public class ComplexDetails {
     private Collection<ComplexDetailsParticipants> participants;
     private Collection<ComplexDetailsCrossReferences> crossReferences;
     private String institution;
+    private String institutionURL;
     private Collection<String> agonists;
     private Collection<String> antagonists;
     private Collection<String> comments;
@@ -181,6 +182,14 @@ public class ComplexDetails {
 
     public void setInstitution(String institution) {
         this.institution = institution;
+    }
+
+    public String getInstitutionURL() {
+        return institutionURL;
+    }
+
+    public void setInstitutionURL(String institutionURL) {
+        this.institutionURL = institutionURL;
     }
 
     public Collection<String> getAgonists() {

@@ -25,6 +25,7 @@ public class ComplexDetailsCrossReferences {
     private String qualifierMI;
     private String dbdefinition;
     private String qualifierDefinition;
+    private String qualifierUrl;
 
 
     /**************************/
@@ -121,4 +122,12 @@ public class ComplexDetailsCrossReferences {
         this.qualifierDefinition = qualifierDefinition;
     }
 
+    @XmlElement
+    public String getQualifierUrl() {
+        return qualifierUrl;
+    }
+
+    public void setQualifierUrl(String qualifierUrl) {
+        this.qualifierUrl = qualifierUrl;
+    }
 }

@@ -97,6 +97,7 @@ public class ComplexManager {
         details.setSystematicName(IntactComplexUtils.getSystematicName(complex));
         details.setSpecies(IntactComplexUtils.getSpeciesName(complex) + "; " + IntactComplexUtils.getSpeciesTaxId(complex));
         details.setInstitution(complex.getSource().getShortName());
+        details.setInstitutionURL(IntactComplexUtils.getCvTermUrl(complex.getSource()));
         details.setAgonists(IntactComplexUtils.getAgonists(complex));
         details.setAntagonists(IntactComplexUtils.getAntagonists(complex));
         details.setComments(IntactComplexUtils.getComments(complex));

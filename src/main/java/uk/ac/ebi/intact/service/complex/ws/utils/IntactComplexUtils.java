@@ -4,6 +4,7 @@ import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.utils.AliasUtils;
 import psidev.psi.mi.jami.utils.AnnotationUtils;
 import psidev.psi.mi.jami.utils.RangeUtils;
+import psidev.psi.mi.jami.utils.XrefUtils;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
 import uk.ac.ebi.intact.jami.model.extension.IntactInteractor;
 import uk.ac.ebi.intact.jami.model.extension.IntactModelledParticipant;
@@ -41,8 +42,14 @@ public class IntactComplexUtils {
     public static final String INTACT = "intact";
     public static final String INTACT_MI = "MI:0469";
 
+    public static final String URL = "url";
+    public static final String URL_MI = "MI:0614";
+
     public static final String SEARCH = "search-url";
     public static final String SEARCH_MI = "MI:0615";
+
+    public static final String PSIMI = "psi-mi";
+    public static final String PSIMI_MI = "MI:0488";
 
     public static final String RNA_CENTRAL = "RNAcentral";
     public static final String RNA_CENTRAL_MI = "MI:1357";
@@ -110,7 +117,15 @@ public class IntactComplexUtils {
                 if (ontologyTerm.getDefinition() != null)
                     cross.setQualifierDefinition(ontologyTerm.getDefinition());
             }
-            cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
+            if (xref.getQualifier().getMIIdentifier() != null) {
+                cross.setQualifierMI(xref.getQualifier().getMIIdentifier());
+                // We get the MI xref of the qualifier, to then get the URL from it
+                XrefUtils.collectAllXrefsHavingDatabaseAndQualifier(
+                        xref.getQualifier().getIdentifiers(), PSIMI_MI, PSIMI, Xref.IDENTITY_MI, Xref.IDENTITY)
+                        .stream()
+                        .findFirst()
+                        .ifPresent(qualifierXref -> cross.setQualifierUrl(getSearchUrl(qualifierXref)));
+            }
         }
         cross.setIdentifier(xref.getId());
         String searchUrl = getSearchUrl(xref);
@@ -133,6 +148,14 @@ public class IntactComplexUtils {
             } else {
                 return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", xref.getId());
             }
+        }
+        return null;
+    }
+
+    public static String getCvTermUrl(CvTerm cvTerm) {
+        Annotation url = AnnotationUtils.collectFirstAnnotationWithTopic(cvTerm.getAnnotations(), URL_MI, URL);
+        if (url != null) {
+            return url.getValue();
         }
         return null;
     }
