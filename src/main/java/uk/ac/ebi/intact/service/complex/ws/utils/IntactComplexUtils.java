@@ -5,11 +5,14 @@ import psidev.psi.mi.jami.utils.AliasUtils;
 import psidev.psi.mi.jami.utils.AnnotationUtils;
 import psidev.psi.mi.jami.utils.RangeUtils;
 import psidev.psi.mi.jami.utils.XrefUtils;
+import uk.ac.ebi.intact.jami.dao.IntactDao;
 import uk.ac.ebi.intact.jami.model.extension.IntactComplex;
+import uk.ac.ebi.intact.jami.model.extension.IntactCvTerm;
 import uk.ac.ebi.intact.jami.model.extension.IntactInteractor;
 import uk.ac.ebi.intact.jami.model.extension.IntactModelledParticipant;
 import uk.ac.ebi.intact.jami.model.extension.IntactStoichiometry;
 import uk.ac.ebi.intact.jami.model.extension.InteractorXref;
+import uk.ac.ebi.intact.jami.utils.IntactUtils;
 import uk.ac.ebi.intact.service.complex.ws.EvidenceTypeCode;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetails;
 import uk.ac.ebi.intact.service.complex.ws.model.ComplexDetailsCrossReferences;
@@ -152,7 +155,25 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static String getCvTermUrl(CvTerm cvTerm) {
+    public static String getSourceUrl(IntactDao intactDao, Source source) {
+        String sourceUrl = getCvTermUrl(source);
+        if (sourceUrl != null) {
+            return sourceUrl;
+        }
+
+        // If the source does not have a URL annotation, we try to get it from
+        // a database CV term with the same PSI-MI id
+        if (source.getMIIdentifier() != null) {
+            IntactCvTerm databaseTerm = intactDao.getCvTermDao().getByMIIdentifier(source.getMIIdentifier(), IntactUtils.DATABASE_OBJCLASS);
+            if (databaseTerm != null) {
+                return getCvTermUrl(databaseTerm);
+            }
+        }
+
+        return null;
+    }
+
+    private static String getCvTermUrl(CvTerm cvTerm) {
         Annotation url = AnnotationUtils.collectFirstAnnotationWithTopic(cvTerm.getAnnotations(), URL_MI, URL);
         if (url != null) {
             return url.getValue();
