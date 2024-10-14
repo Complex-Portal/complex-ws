@@ -219,10 +219,12 @@ public class IntactComplexUtils {
                 setInteractorType(part, interactor);
                 part.setDescription(interactor.getFullName());
                 part.setInteractorAC(((IntactModelledParticipant) participant).getAc());
-                String identifier = getParticipantIdentifier(participant);
                 part.setName(getParticipantName(participant));
-                part.setIdentifier(identifier);
-                part.setIdentifierLink(getParticipantIdentifierLink(participant, identifier));
+                Xref identifierXref = getParticipantIdentifierXref(participant);
+                if (identifierXref != null) {
+                    part.setIdentifier(identifierXref.getId());
+                    part.setIdentifierLink(getIdentifierLink(identifierXref));
+                }
                 part.setStochiometry(getParticipantStoichiometry(participant));
                 if (participant.getBiologicalRole() != null) {
                     setBiologicalRole(part, participant);
@@ -487,36 +489,54 @@ public class IntactComplexUtils {
         return null;
     }
 
-    public static String getParticipantIdentifier(ModelledParticipant participant) {
-        Interactor interactor = participant.getInteractor();
+    public static Xref getParticipantIdentifierXref(ModelledParticipant participant) {
+        return getInteractorIdentifierXref(participant.getInteractor());
+    }
+
+    private static Xref getInteractorIdentifierXref(Interactor interactor) {
         if (interactor != null) {
+            Xref xref = null;
             if (interactor instanceof Protein) {
                 Protein protein = (Protein) interactor;
-                return protein.getPreferredIdentifier().getId();
+                xref = protein.getPreferredIdentifier();
             } else if (interactor instanceof BioactiveEntity) {
                 BioactiveEntity bioactiveEntity = (BioactiveEntity) interactor;
-                return bioactiveEntity.getChebi();
+                xref = bioactiveEntity.getPreferredIdentifier();
             } else if (interactor instanceof Complex) {
                 Complex complexParticipant = (Complex) interactor;
-                return complexParticipant.getComplexAc();
+                xref = complexParticipant.getPreferredIdentifier();
             } else {
                 for (Xref x : interactor.getIdentifiers()) {
                     if (x.getDatabase().getMIIdentifier().equals(RNA_CENTRAL_MI)) {
-                        return x.getId();
+                        xref = x;
                     }
                 }
             }
-            return interactor.getPreferredIdentifier().getId();
+
+            if (xref != null) {
+                return xref;
+            }
+
+            if (interactor instanceof InteractorPool) {
+                InteractorPool interactorPool = (InteractorPool) interactor;
+                for (Interactor subInteractor : interactorPool) {
+                    Xref subInteractorXref = getInteractorIdentifierXref(subInteractor);
+                    if (subInteractorXref != null) {
+                        return subInteractorXref;
+                    }
+                }
+            }
+
+            return interactor.getPreferredIdentifier();
         }
         return null;
     }
 
-    public static String getParticipantIdentifierLink(ModelledParticipant participant, String identifier) {
-        Interactor interactor = participant.getInteractor();
-        if (interactor != null && identifier != null) {
-            Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(interactor.getPreferredIdentifier().getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
+    public static String getIdentifierLink(Xref xref) {
+        if (xref != null) {
+            Annotation searchUrl = AnnotationUtils.collectFirstAnnotationWithTopic(xref.getDatabase().getAnnotations(), SEARCH_MI, SEARCH);
             if (searchUrl != null) {
-                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", identifier);
+                return searchUrl.getValue().replaceAll("\\$*\\{ac\\}", xref.getId());
             }
         }
         return null;

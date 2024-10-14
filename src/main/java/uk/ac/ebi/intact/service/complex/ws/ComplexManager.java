@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import psidev.psi.mi.jami.model.ModelledParticipant;
+import psidev.psi.mi.jami.model.Xref;
 import uk.ac.ebi.complex.service.ComplexFinder;
 import uk.ac.ebi.complex.service.ComplexFinderResult;
 import uk.ac.ebi.intact.dataexchange.psimi.solr.complex.ComplexFieldNames;
@@ -178,9 +179,11 @@ public class ComplexManager {
         List<ComplexInteractor> interactors = new ArrayList<>();
         for (ModelledParticipant modelledParticipant : IntactComplexUtils.mergeParticipants(complex.getParticipants())) {
             ComplexInteractor interactor = new ComplexInteractor();
-            String identifier = IntactComplexUtils.getParticipantIdentifier(modelledParticipant);
-            interactor.setIdentifier(identifier);
-            interactor.setIdentifierLink(IntactComplexUtils.getParticipantIdentifierLink(modelledParticipant, identifier));
+            Xref identifierXref = IntactComplexUtils.getParticipantIdentifierXref(modelledParticipant);
+            if (identifierXref != null) {
+                interactor.setIdentifier(identifierXref.getId());
+                interactor.setIdentifierLink(IntactComplexUtils.getIdentifierLink(identifierXref));
+            }
             interactor.setName(IntactComplexUtils.getParticipantName(modelledParticipant));
             interactor.setDescription(modelledParticipant.getInteractor().getFullName());
             interactor.setStochiometry(IntactComplexUtils.getParticipantStoichiometry(modelledParticipant));
