@@ -259,15 +259,15 @@ public class SearchController {
     public ResponseEntity<String> exportComplex(@PathVariable String query,
                                                 @RequestParam (required = false) String filters,
                                                 @RequestParam (required = false) String format,
+                                                @RequestParam (required = false) String filename,
                                                 HttpServletResponse response) throws Exception {
-        Boolean exportAsFile = false;
 
         List<IntactComplex> complexes;
-        if(isQueryASingleId(query)) {
+        if (isQueryASingleId(query)) {
             complexes = new ArrayList<IntactComplex>(1);
 
             IntactComplex complex;
-            if(query.startsWith("EBI-")) {
+            if (query.startsWith("EBI-")) {
                 complex = intactDao.getComplexDao().getByAc(query);
             } else {
                 complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(query);
@@ -276,16 +276,14 @@ public class SearchController {
 
             if (complex != null)
                 complexes.add(complex);
-        }
-        else {
+        } else {
             ComplexRestResult searchResult = complexManager.query(query, null, null, filters, null);
             complexes = new ArrayList<IntactComplex>(searchResult.getElements().size());
             for (ComplexSearchResults result : searchResult.getElements()) {
-                IntactComplex complex = intactDao.getComplexDao().getByAc(result.getComplexAC());
+                IntactComplex complex = intactDao.getComplexDao().getLatestComplexVersionByComplexAc(result.getComplexAC());
                 if (complex != null)
                     complexes.add(complex);
             }
-            exportAsFile = true;
         }
 
         ResponseEntity<String> responseEntity = null;
@@ -294,22 +292,21 @@ public class SearchController {
             if (format != null) {
                 switch (ComplexExportFormat.formatOf(format)) {
                     case XML25:
-                        responseEntity = createXml25Response(complexes, writerFactory, exportAsFile);
+                        responseEntity = createXml25Response(complexes, writerFactory, filename);
                         break;
                     case XML30:
-                        responseEntity = createXml30Response(complexes, writerFactory, exportAsFile);
+                        responseEntity = createXml30Response(complexes, writerFactory, filename);
                         break;
                     case TSV:
-                        responseEntity = createComplexTabResponse(complexes, exportAsFile);
+                        responseEntity = createComplexTabResponse(complexes, filename);
                         break;
                     case JSON:
                     default:
-                        responseEntity = createJsonResponse(complexes, writerFactory, exportAsFile);
+                        responseEntity = createJsonResponse(complexes, writerFactory, filename);
                         break;
                 }
-            }
-            else {
-                responseEntity = createJsonResponse(complexes, writerFactory, exportAsFile);
+            } else {
+                responseEntity = createJsonResponse(complexes, writerFactory, filename);
             }
             return responseEntity;
         }
@@ -345,15 +342,15 @@ public class SearchController {
         return (query.startsWith("EBI-") || query.startsWith("CPX-")) && query.trim().split(" ").length == 1;
     }
 
-    private ResponseEntity<String> createXml25Response(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, Boolean exportAsFile) {
-        return createXmlResponse(complexes, writerFactory, PsiXmlVersion.v2_5_4, exportAsFile);
+    private ResponseEntity<String> createXml25Response(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, String filename) {
+        return createXmlResponse(complexes, writerFactory, PsiXmlVersion.v2_5_4, filename);
     }
 
-    private ResponseEntity<String> createXml30Response(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, Boolean exportAsFile) {
-        return createXmlResponse(complexes, writerFactory, PsiXmlVersion.v3_0_0, exportAsFile);
+    private ResponseEntity<String> createXml30Response(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, String filename) {
+        return createXmlResponse(complexes, writerFactory, PsiXmlVersion.v3_0_0, filename);
     }
 
-    private ResponseEntity<String> createXmlResponse(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, PsiXmlVersion version, Boolean exportAsFile) {
+    private ResponseEntity<String> createXmlResponse(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, PsiXmlVersion version, String filename) {
         IntactPsiXml.initialiseAllIntactXmlWriters();
         MIWriterOptionFactory optionFactory = MIWriterOptionFactory.getInstance();
         StringWriter answer = new StringWriter();
@@ -371,13 +368,13 @@ public class SearchController {
         httpHeaders.add("Content-Type", MediaType.APPLICATION_XML_VALUE);
         httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(httpHeaders);
-        if (exportAsFile) {
-            httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
+        if (filename != null && !filename.isEmpty()) {
+            httpHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
         }
         return new ResponseEntity<String>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
 
-    private ResponseEntity<String> createJsonResponse(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, Boolean exportAsFile) {
+    private ResponseEntity<String> createJsonResponse(List<IntactComplex> complexes, InteractionWriterFactory writerFactory, String filename) {
 
         InteractionViewerJson.initialiseAllMIJsonWriters();
         MIJsonOptionFactory optionFactory = MIJsonOptionFactory.getInstance();
@@ -398,13 +395,13 @@ public class SearchController {
         httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(httpHeaders);
-        if (exportAsFile) {
-            httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
+        if (filename != null && !filename.isEmpty()) {
+            httpHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
         }
         return new ResponseEntity<String>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
 
-    private ResponseEntity<String> createComplexTabResponse(List<IntactComplex> complexes, Boolean exportAsFile) throws IOException, ComplexExportException {
+    private ResponseEntity<String> createComplexTabResponse(List<IntactComplex> complexes, String filename) throws IOException, ComplexExportException {
         StringWriter answer = new StringWriter();
         ComplexFlatWriter complexFlatWriter = new ComplexFlatWriter(answer);
         for (IntactComplex complex : complexes) {
@@ -415,8 +412,8 @@ public class SearchController {
         httpHeaders.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
         httpHeaders.add("X-Clacks-Overhead", "GNU Terry Pratchett"); //In memory of Sir Terry Pratchett
         enableCORS(httpHeaders);
-        if (exportAsFile) {
-            httpHeaders.set("Content-Disposition", "attachment; filename=" + complexes.toString());
+        if (filename != null && !filename.isEmpty()) {
+            httpHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
         }
         return new ResponseEntity<>(answer.toString(), httpHeaders, HttpStatus.OK);
     }
